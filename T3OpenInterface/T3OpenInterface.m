@@ -23,8 +23,8 @@ t3OpenGetMarketList::usage =
 restituisce la lista dei mercati su cui e' possibile operare dalla T3Open.";
 
 
-borsaItalianaGetLottiMinimi[]::usage =
-"borsaItalianaGetLottiMinimi[]
+borsaItalianaGetLottiMinimi::usage =
+"borsaItalianaGetLottiMinimi[];
 restituisce la tabella dei lotti minimi sulle opzioni isoalpha preleva i dati dal sito di borsaitaliana.it
 I lotti minimi vengono prelevati da fonte esterna e non da T3Open";
 
