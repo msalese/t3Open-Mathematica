@@ -232,12 +232,15 @@ Return[response];
 ];
 
 
-t3OpenUnsubscribe[myT3OpenObj_]:=Module[{},
-(*out@println["function=unsubscribe"];
-socket@close[];*)
+t3OpenUnsubscribe[myT3OpenObj_]:=Module[{i},
+(*send unsubscribe comand*)
 myT3OpenObj@getRefOutStream[]@println["function=unsubscribe"];
+(*close java socket connection*)
 myT3OpenObj@getRefSocket[]@close[];
-Clear[Evaluate[myT3OpenObj]];
+(*release java object*)
+(*Table[ReleaseJavaObject[myT3OpenObj[[i]]],{i,1,Dimensions[myT3OpenObj][[1]]}]*)
+(*TODO Unsubscribe : must be corrected*)
+Return[myT3OpenObj];
 ];
 SetAttributes[t3OpenUnsubscribe,Listable];
 
