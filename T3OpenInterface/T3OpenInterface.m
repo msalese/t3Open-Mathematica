@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-BeginPackage["T3Open`",{"JLink`"}];
+BeginPackage["T3OpenInterface`",{"JLink`"}];
 
 
 getT3OpenStatus::usage = 
@@ -90,7 +90,14 @@ Begin["Private`"];
 ReinstallJava[CommandLine->"E:\\Java\\jre7\\bin\\javaw.exe"];
 
 
-AddToClassPath["C:\\Users\\msalese\\Desktop\\gdrive\\Google Drive\\Finance\\Trading\\T3OpenInterface\\Java"];
+If[$SystemID=="Windows-x86-64",
+	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"\T3OpenInterface\Java"],
+	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"/T3OpenInterface/Java"]
+];
+
+
+(*add t3OpenIterface class to the java path*)
+AddToClassPath[t3OpenInterfaceJavaClassPath];
 
 
 Options[getT3OpenStatus]={ipAddress->"127.0.0.1",httpPort->8333};
