@@ -3,39 +3,37 @@
 BeginPackage["T3OpenInterface`",{"JLink`"}];
 
 
-getT3OpenStatus::usage = 
-"getT3OpenStatus[hostAddress_,httpPort_];
+t3OpenGetStatus::usage = 
+"t3OpenGetStatus[OptionsPattern[]];
 restituisce OK se lo stato della piattaforma e' valido";
 
 
-getT3OpenTickerSearch::usage =
-"getT3OpenTickerSearch[exchange_,market_,type_,pattern_,OptionsPattern[]]
+t3OpenGetTickerByName::usage =
+"t3OpenGetTickerByName[exchange_,market_,pattern_,OptionsPattern[]]
 restituisce il risultato di una interrogazione con pattern.
 {ipAddress->'127.0.0.1',httpPort\[Rule]8333}";
 
 
-formatSearchList::usage =
-"formatta il risultato proveniente da getT3OpenTickerSearch";
+t3OpenFormatSearchList::usage =
+"formatta il risultato proveniente da t3OpenGetTickerByName";
 
 
-getT3OpenMarketList::usage =
-"getT3OpenMarketList[] restituisce la lista dei mercati della T3Open.
-Legge i dati di connessione dal foglio Status
-Scarica i dati sul foglio MarketList B5:C5";
+t3OpenGetMarketList::usage =
+"t3OpenGetMarketList[OptionsPattern[]]
+restituisce la lista dei mercati su cui e' possibile operare dalla T3Open.";
 
 
-getLottiMinimi::usage =
-"getLottiMinimi[] restituisce la tabella dei lotti minimi sulle opzioni isoalpha
-preleva i dati dal sito di borsaitaliana.it
-scarica i dati sul foglio LottiMinimi
-aggiorna la data dell'ultima richiesta";
+borsaItalianaGetLottiMinimi[]::usage =
+"borsaItalianaGetLottiMinimi[]
+restituisce la tabella dei lotti minimi sulle opzioni isoalpha preleva i dati dal sito di borsaitaliana.it
+I lotti minimi vengono prelevati da fonte esterna e non da T3Open";
 
 
 t3OpenObject::usage =
 "t3OpenObject[objList_,OptionsPattern[]]
 crea un oggetto o lista di oggetti delle classe com.t3.T3Open ed esegue il metodo openConnection[]
-che apre per ogni oggetto un socket con l apiattaforma.
-objList deve essere una lista di copie {{code,symbol}} precedentemente create usando getT3OpenTickerSearch.
+che apre per ogni oggetto un socket con la piattaforma.
+objList deve essere una lista di copie {{code,symbol}} precedentemente create usando t3OpneGetTickerByName.
 {ipAddress->'192.168.0.78',tcpPort->5333,soTimeout\[Rule]250} sono le opzioni di default";
 
 
@@ -45,8 +43,8 @@ Sottoscrive alla piattaforma un codice ed uno schema,
 restituisce il messaggio di OK o KO";
 
 
-t3OpenSubscribeLastprice::usage = 
-"t3OpenSubscribeLastprice[myT3OpenObj_,exchange_,market_,code_];
+t3OpenSubscribeLastPrice::usage = 
+"t3OpenSubscribeLastPrice[myT3OpenObj_,exchange_,market_,code_];
 Sottoscrive lo schema last_price alla piattaforma,
 restituisce il messaggio di OK o KO.
 A questo punto gli oggetti myT3OpenObj di com.t3.T3Open sono impegnati e non possono essere piu' usati
@@ -91,7 +89,7 @@ ReinstallJava[CommandLine->"E:\\Java\\jre7\\bin\\javaw.exe"];
 
 
 If[$SystemID=="Windows-x86-64",
-	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"\T3OpenInterface\Java"],
+	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"\\T3OpenInterface\\Java"],
 	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"/T3OpenInterface/Java"]
 ];
 
@@ -100,10 +98,10 @@ If[$SystemID=="Windows-x86-64",
 AddToClassPath[t3OpenInterfaceJavaClassPath];
 
 
-Options[getT3OpenStatus]={ipAddress->"127.0.0.1",httpPort->8333};
+Options[t3OpenGetStatus]={ipAddress->"127.0.0.1",httpPort->8333};
 
 
-getT3OpenStatus[OptionsPattern[]]:=Module[{command,sendCommand,status},
+t3OpenGetStatus[OptionsPattern[]]:=Module[{command,sendCommand,status},
 command = "http_server_status";
 sendCommand = StringJoin[{"http://",ToString[OptionValue[ipAddress]],":",ToString[OptionValue[httpPort]],"/T3OPEN/",command}];
 status = Import[sendCommand];
@@ -111,10 +109,10 @@ Return[status];
 ]; 
 
 
-Options[getT3OpenMarketList]={ipAddress->"127.0.0.1",httpPort->8333};
+Options[t3OpenGetMarketList]={ipAddress->"127.0.0.1",httpPort->8333};
 
 
-getT3OpenMarketList[OptionsPattern[]]:=Module[
+t3OpenGetMarketList[OptionsPattern[]]:=Module[
 {command,sendCommand,marketList},
 command = "get_market_list";
 sendCommand = StringJoin[{"http://",ToString[OptionValue[ipAddress]],":",ToString[OptionValue[httpPort]],"/T3OPEN/",command}];
@@ -124,20 +122,20 @@ Return[marketList];
 ];
 
 
-Options[getT3OpenTickerSearch]={ipAddress->"127.0.0.1",httpPort->8333};
+Options[t3OpenGetTickerByName]={ipAddress->"127.0.0.1",httpPort->8333,type->"N"};
 
 
-getT3OpenTickerSearch[exchange_,market_,type_,pattern_,OptionsPattern[]]:=Module[
+t3OpenGetTickerByName[exchange_String,market_String,pattern_String,OptionsPattern[]]:=Module[
 {command,command01,sendCommand,searchList},
 command = "search";
-command01 = StringJoin[command,"?borsa=",exchange,"&mercato=",market,"&tipoRicerca=",type,"&pattern=",pattern];
+command01 = StringJoin[command,"?borsa=",exchange,"&mercato=",market,"&tipoRicerca=",ToString[OptionValue[type]],"&pattern=",pattern];
 sendCommand = StringJoin[{"http://",ToString[OptionValue[ipAddress]],":",ToString[OptionValue[httpPort]],"/T3OPEN/",command01}];
 searchList= Import[sendCommand];
 Return[searchList];
 ];
 
 
-formatSearchList[searchList_]:=Module[{searchList02,stringSearch03,stringSearch04},
+t3OpenFormatSearchList[searchList_]:=Module[{searchList02,stringSearch03,stringSearch04},
 searchList02 = StringSplit[searchList,{"outcome=","numElements=",{"element="}}];
 stringSearch03 = Drop[searchList02,2];
 stringSearch04 = Table[StringTrim[stringSearch03[[i]]],{i,1,Length[stringSearch03]}];
@@ -145,7 +143,7 @@ Return[stringSearch04];
 ];
 
 
-getLottiMinimi[]:=Module[{sendCommand,lottiMinimi,lottiMinimi02},
+borsaItalianaGetLottiMinimi[]:=Module[{sendCommand,lottiMinimi,lottiMinimi02},
 sendCommand = "http://www.borsaitaliana.it/derivati/specifichecontrattuali/lottiminimiopzionisuazioni.htm";
 lottiMinimi= Import[sendCommand,"Data"];
 lottiMinimi02 =lottiMinimi[[2]];
@@ -172,24 +170,7 @@ Return[codeList02];
 ];
 
 
-t3OpenSubscribe[myT3OpenObj_,exchange_,market_,code_,schema_]:= Module[
-{funSub,request,response},
-response={};
-funSub= "function=subscribe|item=";
-(*build the string request to send*)
-request =StringJoin[{funSub,exchange,".",market,".",code,"|schema=",schema}];
-(*send the request*)
-(*out@println[request];*)
-myT3OpenObj@getRefOutStream[]@println[request];
-(*read the first response*)
-(*response = in@readLine[];*)
-response = myT3OpenObj@getRefBufReader[]@readLine[];
-(*response = Take[Flatten[StringSplit[response,"|"]],-1];*)
-Return[response];
-];
-
-
-t3OpenSubscribeLastprice[myT3OpenObj_,exchange_,market_,code_]:= Module[
+t3OpenSubscribeLastPrice[myT3OpenObj_,exchange_,market_,code_]:= Module[
 {funSub,request,response},
 response={};
 funSub= "function=subscribe|item=";
