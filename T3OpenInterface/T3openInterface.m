@@ -90,7 +90,7 @@ Begin["Private`"];
 ReinstallJava[CommandLine->"E:\\Java\\jre7\\bin\\javaw.exe"];
 
 
-AddToClassPath["C:\\myClass"];
+AddToClassPath["C:\\Users\\msalese\\Desktop\\gdrive\\Google Drive\\Finance\\Trading\\T3OpenInterface\\Java"];
 
 
 Options[getT3OpenStatus]={ipAddress->"127.0.0.1",httpPort->8333};
