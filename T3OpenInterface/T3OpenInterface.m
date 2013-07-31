@@ -166,6 +166,8 @@ t3OpenObject[codeList_,OptionsPattern[]]:=Module[{objList,codeList02},
 objList=Table[JavaNew["com.t3.t3Open",MakeJavaObject[OptionValue[ipAddress]],MakeJavaObject[OptionValue[tcpPort]],MakeJavaObject[OptionValue[soTimeout]]],{i,1,Dimensions[codeList][[1]]}];
 Table[objList[[i]]@openConnection[],{i,1,Dimensions[objList][[1]]}];
 codeList02 = Table[Append[codeList[[i]],objList[[i]]],{i,1,Dimensions[objList][[1]]}];
+Table[codeList02[[All,3]][[i]]@setPoolingWhatSymbol[codeList[[All,2]][[i]]],{i,1,Dimensions[codeList02[[All,3]]][[1]]}];
+Table[codeList02[[All,3]][[i]]@setPoolingWhatCode[codeList[[All,1]][[i]]],{i,1,Dimensions[codeList02[[All,3]]][[1]]}];
 Return[codeList02];
 ];
 
@@ -176,11 +178,11 @@ response={};
 funSub= "function=subscribe|item=";
 (*build the string request to send*)
 request =StringJoin[{funSub,exchange,".",market,".",code,"|schema=","last_price"}];
+(*set poolingWhat attribute*)
+myT3OpenObj@setPoolingWhat["last_price"];
 (*send the request*)
-(*out@println[request];*)
 myT3OpenObj@getRefOutStream[]@println[request];
 (*read the first response*)
-(*response = in@readLine[];*)
 response = myT3OpenObj@getRefBufReader[]@readLine[];
 (*response = Take[Flatten[StringSplit[response,"|"]],-1];*)
 Return[response];
@@ -193,11 +195,11 @@ response={};
 funSub= "function=subscribe|item=";
 (*build the string request to send*)
 request =StringJoin[{funSub,exchange,".",market,".",code,"|schema=","best_bid1"}];
+(*set poolingWhat attribute*)
+myT3OpenObj@setPoolingWhat["best_bid1"];
 (*send the request*)
-(*out@println[request];*)
 myT3OpenObj@getRefOutStream[]@println[request];
 (*read the first response*)
-(*response = in@readLine[];*)
 response = myT3OpenObj@getRefBufReader[]@readLine[];
 (*response = Take[Flatten[StringSplit[response,"|"]],-1];*)
 Return[response];
@@ -210,11 +212,11 @@ response={};
 funSub= "function=subscribe|item=";
 (*build the string request to send*)
 request =StringJoin[{funSub,exchange,".",market,".",code,"|schema=","best_ask1"}];
+(*set poolingWhat attribute*)
+myT3OpenObj@setPoolingWhat["best_ask1"];
 (*send the request*)
-(*out@println[request];*)
 myT3OpenObj@getRefOutStream[]@println[request];
 (*read the first response*)
-(*response = in@readLine[];*)
 response = myT3OpenObj@getRefBufReader[]@readLine[];
 (*response = Take[Flatten[StringSplit[response,"|"]],-1];*)
 Return[response];
@@ -226,7 +228,7 @@ t3OpenGetSubscribedData[myT3OpenObj_]:= Module[
 response={};
 (*read the second response, here are the data that I need*)
 myT3OpenObj@getSubscribedData[];
-response = Append[response ,myT3OpenObj@pooledData];
+response = Append[response ,myT3OpenObj@getPooledData[]];
 (*response = Take[Flatten[StringSplit[response,"|"]],-1]*)
 Return[response];
 ];
@@ -238,7 +240,7 @@ myT3OpenObj@getRefOutStream[]@println["function=unsubscribe"];
 (*close java socket connection*)
 myT3OpenObj@getRefSocket[]@close[];
 (*release java object*)
-(*Table[ReleaseJavaObject[myT3OpenObj[[i]]],{i,1,Dimensions[myT3OpenObj][[1]]}]*)
+ReleaseJavaObject[myT3OpenObj];
 (*TODO Unsubscribe : must be corrected*)
 Return[myT3OpenObj];
 ];
