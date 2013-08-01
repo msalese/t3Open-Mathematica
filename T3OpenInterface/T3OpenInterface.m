@@ -94,6 +94,30 @@ returns the finance section (italian lista delle rubriche) bounded with deposit 
 Options[t3OpenGetFinanceSection]={ipAddress->'127.0.0.1',httpPort->8333}";
 
 
+t3OpenSubscribePortfolio:;usage =
+"to completed";
+
+
+t3OpenUnsubscribePortfolio::usage =
+"to be completed";
+
+
+t3OpenSubscribePortfolioBalance::usage =
+"to be completed";
+
+
+t3OpenUnsubscribePortfolioBalance::usage =
+"to be completed";
+
+
+t3OpenSubscribeOrderBook::usage =
+"to be completed";
+
+
+t3OpenUnsubscribeOrderBook::usage =
+"to be completed";
+
+
 Begin["Private`"];
 
 
@@ -301,8 +325,8 @@ Options[t3OpenGetFinanceSection]={ipAddress->"127.0.0.1",httpPort->8333};
 t3OpenGetFinanceSection[deposit_String,OptionsPattern[]]:=Module[{command,sendCommand,financeSection},
 command = "get_rubriche";
 sendCommand = StringJoin[{"http://",ToString[OptionValue[ipAddress]],":",ToString[OptionValue[httpPort]],"/T3OPEN/",command,"?conto=",deposit}];
-finaceSection = Import[sendCommand];
-Return[finaceSection];
+financeSection = Import[sendCommand];
+Return[financeSection];
 ]; 
 
 
