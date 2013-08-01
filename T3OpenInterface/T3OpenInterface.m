@@ -82,10 +82,28 @@ t3OpenGetHDailyClosePrice::usage =
 get historical daily close price.";
 
 
+t3OpenGetDepositList::usage =
+"t3OpenGetDepositList[];
+returns the bond/security/stock deposit list (italian lista depositi).
+Options[t3OpenGetDepositList]={ipAddress->'127.0.0.1',httpPort->8333}";
+
+
+t3OpenGetFinanceSection::usage =
+"t3OpenGetFinanceSection[deposit_String,OptionsPattern[]];
+returns the finance section (italian lista delle rubriche) bounded with deposit list.
+Options[t3OpenGetFinanceSection]={ipAddress->'127.0.0.1',httpPort->8333}";
+
+
 Begin["Private`"];
 
 
 ReinstallJava[CommandLine->"E:\\Java\\jre7\\bin\\javaw.exe"];
+
+
+If[$SystemID=="Windows-x86-64",
+	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"\\T3OpenInterface\\Java"],
+	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"/T3OpenInterface/Java"]
+];
 
 
 If[$SystemID=="Windows-x86-64",
@@ -253,7 +271,6 @@ Options[t3OpenGetHDailyClosePrice]={ipAddress->"127.0.0.1",httpPort->8333,freque
 t3OpenGetHDailyClosePrice[market_String,exchange_String,code_String,fromDate_String,OptionsPattern[]]:=Module[
 {command,data01,data02,data03,counter,close,closeDate,dataToPlot},
 command = StringJoin["http://",OptionValue[ipAddress],":",ToString[OptionValue[httpPort]],"/T3OPEN/get_history?item=",market,".",exchange,".",ToString[code],"&frequency=",OptionValue[frequency],"&dataDa=",fromDate];
-
 data01 =Import[command];
 data01 =Drop[data01,1];
 data02 = Table[StringSplit[data01[[i]],"element="],{i,1,Dimensions[data01][[1]]}];
@@ -265,6 +282,120 @@ counter=Range[1,Length[close],1];
 dataToPlot = Transpose[{counter,closeDate,close}];
 Return[dataToPlot];
 ];
+
+
+Options[t3OpenGetDepositList]={ipAddress->"127.0.0.1",httpPort->8333};
+
+
+t3OpenGetDepositList[OptionsPattern[]]:=Module[{command,sendCommand,depositList},
+command = "get_conti";
+sendCommand = StringJoin[{"http://",ToString[OptionValue[ipAddress]],":",ToString[OptionValue[httpPort]],"/T3OPEN/",command}];
+depositList = Import[sendCommand];
+Return[depositList];
+]; 
+
+
+Options[t3OpenGetFinanceSection]={ipAddress->"127.0.0.1",httpPort->8333};
+
+
+t3OpenGetFinanceSection[deposit_String,OptionsPattern[]]:=Module[{command,sendCommand,financeSection},
+command = "get_rubriche";
+sendCommand = StringJoin[{"http://",ToString[OptionValue[ipAddress]],":",ToString[OptionValue[httpPort]],"/T3OPEN/",command,"?conto=",deposit}];
+finaceSection = Import[sendCommand];
+Return[finaceSection];
+]; 
+
+
+t3OpenSubscribePortfolio[myT3OpenObj_,deposit_]:= Module[
+{funSub,request,response},
+response={};
+funSub= "function=subscribe_portfolio|item=";
+(*build the string request to send*)
+request =StringJoin[{funSub,deposit}];
+(*set poolingWhat attribute*)
+myT3OpenObj@setPoolingWhat["subscribe_portafolio"];
+(*send the request*)
+myT3OpenObj@getRefOutStream[]@println[request];
+(*read the first response*)
+response = myT3OpenObj@getRefBufReader[]@readLine[];
+(*response = Take[Flatten[StringSplit[response,"|"]],-1];*)
+Return[response];
+];
+
+
+t3OpenUnsubscribePortfolio[myT3OpenObj_]:=Module[{i},
+(*send unsubscribe comand*)
+myT3OpenObj@getRefOutStream[]@println["function=unsubscribe_portfolio"];
+(*close java socket connection*)
+myT3OpenObj@getRefSocket[]@close[];
+(*release java object*)
+ReleaseJavaObject[myT3OpenObj];
+(*TODO Unsubscribe : must be corrected*)
+Return[myT3OpenObj];
+];
+SetAttributes[t3OpenUnsubscribePortfolio,Listable];
+
+
+t3OpenSubscribePortfolioBalance[myT3OpenObj_,deposit_]:= Module[
+{funSub,request,response},
+response={};
+funSub= "function=subscribe_portfolio_balance|item=";
+(*build the string request to send*)
+request =StringJoin[{funSub,deposit}];
+(*set poolingWhat attribute*)
+myT3OpenObj@setPoolingWhat["subscribe_portafolio"];
+(*send the request*)
+myT3OpenObj@getRefOutStream[]@println[request];
+(*read the first response*)
+response = myT3OpenObj@getRefBufReader[]@readLine[];
+(*response = Take[Flatten[StringSplit[response,"|"]],-1];*)
+Return[response];
+];
+
+
+t3OpenUnsubscribePortfolioBalance[myT3OpenObj_]:=Module[{i},
+(*send unsubscribe comand*)
+myT3OpenObj@getRefOutStream[]@println["function=unsubscribe_portfolio_balance"];
+(*close java socket connection*)
+myT3OpenObj@getRefSocket[]@close[];
+(*release java object*)
+ReleaseJavaObject[myT3OpenObj];
+(*TODO Unsubscribe : must be corrected*)
+Return[myT3OpenObj];
+];
+SetAttributes[t3OpenUnsubscribePortfolioBalance,Listable];
+
+
+t3OpenSubscribeOrderBook[myT3OpenObj_,deposit_]:= Module[
+{funSub,request,response},
+response={};
+funSub= "function=subscribe_orderbook|item=";
+(*build the string request to send*)
+request =StringJoin[{funSub,deposit}];
+(*set poolingWhat attribute*)
+myT3OpenObj@setPoolingWhat["subscribe_portafolio"];
+(*send the request*)
+myT3OpenObj@getRefOutStream[]@println[request];
+(*read the first response*)
+response = myT3OpenObj@getRefBufReader[]@readLine[];
+(*response = Take[Flatten[StringSplit[response,"|"]],-1];*)
+Return[response];
+];
+
+
+t3OpenUnsubscribeOrderBook[myT3OpenObj_]:=Module[{i},
+(*send unsubscribe comand*)
+myT3OpenObj@getRefOutStream[]@println["function=unsubscribe_orderbook"];
+(*close java socket connection*)
+myT3OpenObj@getRefSocket[]@close[];
+(*release java object*)
+ReleaseJavaObject[myT3OpenObj];
+(*TODO Unsubscribe : must be corrected*)
+Return[myT3OpenObj];
+];
+
+
+SetAttributes[t3OpenUnsubscribeOrderBook,Listable];
 
 
 End[];
