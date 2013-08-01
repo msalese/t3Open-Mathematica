@@ -342,6 +342,8 @@ myT3OpenObj@setPoolingWhat["subscribe_portafolio"];
 myT3OpenObj@getRefOutStream[]@println[request];
 (*read the first response*)
 response = myT3OpenObj@getRefBufReader[]@readLine[];
+(*read others using while on BufferedReader ready() method*)
+(*TO DO*)
 (*response = Take[Flatten[StringSplit[response,"|"]],-1];*)
 Return[response];
 ];
