@@ -94,7 +94,7 @@ returns the finance section (italian lista delle rubriche) bounded with deposit 
 Options[t3OpenGetFinanceSection]={ipAddress->'127.0.0.1',httpPort->8333}";
 
 
-t3OpenSubscribePortfolio:;usage =
+t3OpenSubscribePortfolio::usage =
 "to completed";
 
 
