@@ -1,4 +1,6 @@
 t3Open-Mathematica
 ==================
 
-Mathematica Package to WeBank t3Open Trading Platform
+Mathematica Package:
+
+an Interface to WeBank t3Open Italian Trading Platform
