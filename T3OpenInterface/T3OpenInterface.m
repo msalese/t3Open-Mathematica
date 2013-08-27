@@ -82,6 +82,11 @@ t3OpenGetHDailyClosePrice::usage =
 get historical daily close price.";
 
 
+t3OpenGetHClosePrice1M::usage = 
+"getHClosePrice1M[market_String,exchange_String,code_String,fromDate_String,OptionsPattern[]];
+get historical intraday 1 minute close price.";
+
+
 t3OpenGetDepositList::usage =
 "t3OpenGetDepositList[];
 returns the bond/security/stock deposit list (italian lista depositi).
@@ -293,6 +298,25 @@ Options[t3OpenGetHDailyClosePrice]={ipAddress->"127.0.0.1",httpPort->8333,freque
 
 
 t3OpenGetHDailyClosePrice[market_String,exchange_String,code_String,fromDate_String,OptionsPattern[]]:=Module[
+{command,data01,data02,data03,counter,close,closeDate,dataToPlot},
+command = StringJoin["http://",OptionValue[ipAddress],":",ToString[OptionValue[httpPort]],"/T3OPEN/get_history?item=",market,".",exchange,".",ToString[code],"&frequency=",OptionValue[frequency],"&dataDa=",fromDate];
+data01 =Import[command];
+data01 =Drop[data01,1];
+data02 = Table[StringSplit[data01[[i]],"element="],{i,1,Dimensions[data01][[1]]}];
+data02 =Flatten[data02];
+data03 =StringSplit[data02,"|"];
+closeDate = data03[[All,1]];
+close = ToExpression[data03[[All,5]]];
+counter=Range[1,Length[close],1];
+dataToPlot = Transpose[{counter,closeDate,close}];
+Return[dataToPlot];
+];
+
+
+Options[t3OpenGetHClosePrice1M]={ipAddress->"127.0.0.1",httpPort->8333,frequency->"1M"};
+
+
+t3OpenGetHClosePrice1M[market_String,exchange_String,code_String,fromDate_String,OptionsPattern[]]:=Module[
 {command,data01,data02,data03,counter,close,closeDate,dataToPlot},
 command = StringJoin["http://",OptionValue[ipAddress],":",ToString[OptionValue[httpPort]],"/T3OPEN/get_history?item=",market,".",exchange,".",ToString[code],"&frequency=",OptionValue[frequency],"&dataDa=",fromDate];
 data01 =Import[command];
