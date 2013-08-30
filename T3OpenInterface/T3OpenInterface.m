@@ -303,7 +303,7 @@ Options[t3OpenGetHDailyClosePrice]={ipAddress->"127.0.0.1",httpPort->8333,freque
 
 
 t3OpenGetHDailyClosePrice[market_String,exchange_String,code_String,fromDate_String,OptionsPattern[]]:=Module[
-{command,data01,data02,data03,counter,close,closeDate,dataToPlot,toDay,fromDateF,fromDateF1},
+{command,data01,data02,data03,counter,close,closeDate,dataToPlot,toDay,fromDateF,fromDateF1,ohlc},
 (*check fromDate value*)
 toDay = DateList[DateString[DateList[],{"Year","Month","Day"}]];
 fromDateF = DateList[{fromDate,{"Year","","Month","","Day"}}];
@@ -315,10 +315,12 @@ data01 =Drop[data01,1];
 data02 = Table[StringSplit[data01[[i]],"element="],{i,1,Dimensions[data01][[1]]}];
 data02 =Flatten[data02];
 data03 =StringSplit[data02,"|"];
-closeDate = data03[[All,1]];
-close = ToExpression[data03[[All,5]]];
-counter=Range[1,Length[close],1];
-dataToPlot = Transpose[{counter,closeDate,close}];
+(*take out date and put in math date format*) 
+closeDate = Table[DateList[{data03[[i,1]],{"Year","","Month","","Day"}}],{i,1,Length[data03[[All,1]]]}];
+(*take out Open,High, Low, Close and Volume-*)
+ohlc = ToExpression[data03[[All,{4,2,3,5,6}]]];
+(*create the time series*)
+dataToPlot = Transpose[{closeDate,ohlc}];
 Return[dataToPlot];
 ];
 
@@ -339,10 +341,12 @@ data01 =Drop[data01,1];
 data02 = Table[StringSplit[data01[[i]],"element="],{i,1,Dimensions[data01][[1]]}];
 data02 =Flatten[data02];
 data03 =StringSplit[data02,"|"];
-closeDate = data03[[All,1]];
-close = ToExpression[data03[[All,5]]];
-counter=Range[1,Length[close],1];
-dataToPlot = Transpose[{counter,closeDate,close}];
+(*take out date and put in math date format*) 
+closeDate = Table[DateList[{data03[[i,1]],{"Year","","Month","","Day","","Hour","","Minute","","Second"}}],{i,1,Length[data03[[All,1]]]}];
+(*take out Open,High, Low, Close and Volume-*)
+ohlc = ToExpression[data03[[All,{4,2,3,5,6}]]];
+(*create the time series*)
+dataToPlot = Transpose[{closeDate,ohlc}];
 Return[dataToPlot];
 ];
 
@@ -363,10 +367,12 @@ data01 =Drop[data01,1];
 data02 = Table[StringSplit[data01[[i]],"element="],{i,1,Dimensions[data01][[1]]}];
 data02 =Flatten[data02];
 data03 =StringSplit[data02,"|"];
-closeDate = data03[[All,1]];
-close = ToExpression[data03[[All,5]]];
-counter=Range[1,Length[close],1];
-dataToPlot = Transpose[{counter,closeDate,close}];
+(*take out date and put in math date format*) 
+closeDate = Table[DateList[{data03[[i,1]],{"Year","","Month","","Day","","Hour","","Minute","","Second"}}],{i,1,Length[data03[[All,1]]]}];
+(*take out Open,High, Low, Close and Volume-*)
+ohlc = ToExpression[data03[[All,{4,2,3,5,6}]]];
+(*create the time series*)
+dataToPlot = Transpose[{closeDate,ohlc}];
 Return[dataToPlot];
 ];
 
