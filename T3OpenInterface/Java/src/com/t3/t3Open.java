@@ -182,12 +182,10 @@ public class t3Open {
 		
 	}
 	catch(UnknownHostException e) {
-        System.err.println("Don't know about host: taranis.");
-        System.exit(1);
+        System.err.println("Don't know about host.");
     }
 	catch (IOException e) {
-        System.err.println("Couldn't get I/O for the connection to: taranis.");
-        System.exit(1);
+        System.err.println("Couldn't get I/O for the connection.");
     }
 
 	}
