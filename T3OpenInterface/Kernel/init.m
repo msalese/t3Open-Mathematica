@@ -1,3 +1,3 @@
 (* ::Package:: *)
 
-If[FreeQ[$Packages, "t3OpenInterface`"], Get["t3OpenInterface`t3OpenInterface`"]];
+If[FreeQ[$Packages, "T3OpenInterface`"], Get["T3OpenInterface`T3OpenInterface`"]];
