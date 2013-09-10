@@ -8,9 +8,14 @@ returns OK if t3Open is running and tcp/http communications are activese.
 Options[t3OpenGetStatus]";
 
 
-t3OpenGetTickerByName::usage = "t3OpenGetTickerByName[exchange,market,pattern] function 
-returns list as result of pattern query.
+t3OpenGetTickerByName::usage = "t3OpenGetTickerByName[exchange,market,patternName] function 
+returns list as result of pattern-name query.
 Options[t3OpenGetTickerByName]";
+
+
+t3OpenGetTickerBySymbol::usage = "t3OpenGetTickerBySymbol[exchange,market,patternSymbol] function 
+returns list as result of pattern-symbol query.
+Options[t3OpenGetTickerBySymbol]";
 
 
 t3OpenFormatSearchList::usage = "t3OpenFormatSearchList[searchList] function
@@ -147,6 +152,19 @@ Options[t3OpenGetTickerByName]={ipAddress->"127.0.0.1",httpPort->8333,type->"N"}
 
 
 t3OpenGetTickerByName[exchange_String,market_String,pattern_String,OptionsPattern[]]:=Module[
+{command,command01,sendCommand,searchList},
+command = "search";
+command01 = StringJoin[command,"?borsa=",exchange,"&mercato=",market,"&tipoRicerca=",ToString[OptionValue[type]],"&pattern=",pattern];
+sendCommand = StringJoin[{"http://",ToString[OptionValue[ipAddress]],":",ToString[OptionValue[httpPort]],"/T3OPEN/",command01}];
+searchList= Import[sendCommand];
+Return[searchList];
+];
+
+
+Options[t3OpenGetTickerBySymbol]={ipAddress->"127.0.0.1",httpPort->8333,type->"S"};
+
+
+t3OpenGetTickerBySymbol[exchange_String,market_String,pattern_String,OptionsPattern[]]:=Module[
 {command,command01,sendCommand,searchList},
 command = "search";
 command01 = StringJoin[command,"?borsa=",exchange,"&mercato=",market,"&tipoRicerca=",ToString[OptionValue[type]],"&pattern=",pattern];
