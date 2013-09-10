@@ -3,129 +3,98 @@
 BeginPackage["T3OpenInterface`",{"JLink`"}];
 
 
-t3OpenGetStatus::usage = 
-"t3OpenGetStatus[OptionsPattern[]];
-restituisce OK se lo stato della piattaforma e' valido";
+t3OpenGetStatus::usage = "t3OpenGetStatus[] function 
+returns OK if t3Open is running and tcp/http communications are activese.
+Options[t3OpenGetStatus]";
 
 
-t3OpenGetTickerByName::usage =
-"t3OpenGetTickerByName[exchange_,market_,pattern_,OptionsPattern[]]
-restituisce il risultato di una interrogazione con pattern.
-{ipAddress->'127.0.0.1',httpPort\[Rule]8333}";
+t3OpenGetTickerByName::usage = "t3OpenGetTickerByName[exchange,market,pattern] function 
+returns list as result of pattern query.
+Options[t3OpenGetTickerByName]";
 
 
-t3OpenFormatSearchList::usage =
-"formatta il risultato proveniente da t3OpenGetTickerByName";
+t3OpenFormatSearchList::usage = "t3OpenFormatSearchList[searchList] function
+format data from t3OpenGetTickerByName";
 
 
-t3OpenGetMarketList::usage =
-"t3OpenGetMarketList[OptionsPattern[]]
-restituisce la lista dei mercati su cui e' possibile operare dalla T3Open.";
+t3OpenGetMarketList::usage = "t3OpenGetMarketList[] function
+returns T3Open market list.
+Options[t3OpenGetMarketList]";
 
 
-borsaItalianaGetLottiMinimi::usage =
-"borsaItalianaGetLottiMinimi[];
-restituisce la tabella dei lotti minimi sulle opzioni isoalpha preleva i dati dal sito di borsaitaliana.it
-I lotti minimi vengono prelevati da fonte esterna e non da T3Open";
+borsaItalianaGetLottiMinimi::usage = "borsaItalianaGetLottiMinimi[] a non T3Opne function
+returns isoalpha (american options) minimum number of stocks, download data from borsaitaliana.it
+Options[borsaItalianaGetLottiMinimi]";
 
 
-t3OpenObject::usage =
-"t3OpenObject[objList_,OptionsPattern[]]
-crea un oggetto o lista di oggetti delle classe com.t3.T3Open ed esegue il metodo openConnection[]
-che apre per ogni oggetto un socket con la piattaforma.
-objList deve essere una lista di copie {{code,symbol}} precedentemente create usando t3OpneGetTickerByName.
-{ipAddress->'192.168.0.78',tcpPort->5333,soTimeout\[Rule]250} sono le opzioni di default";
+t3OpenObject::usage = "t3OpenObject[objList] function
+returns a java object (or a list of java object) from class com.t3.T3Open and execute openConnection() method
+which open a tcp socket to T3Open platform, objList must be a list of couples {{code,symbol}}.
+Options[t3OpenObject]";
 
 
-t3OpenSubscribe::usage =
-"t3OpenSubscribe[myT3OpenObj_,exchange_,market_,code_,schema_];
-Sottoscrive alla piattaforma un codice ed uno schema,
-restituisce il messaggio di OK o KO";
+t3OpenSubscribe::usage = "t3OpenSubscribe[T3OpenJavaObj,exchange,market,code,schema] function
+subscribe tcp data to T3Open code and schema, if subscription action is fine return OK";
 
 
-t3OpenSubscribeLastPrice::usage = 
-"t3OpenSubscribeLastPrice[myT3OpenObj_,exchange_,market_,code_];
-Sottoscrive lo schema last_price alla piattaforma,
-restituisce il messaggio di OK o KO.
-A questo punto gli oggetti myT3OpenObj di com.t3.T3Open sono impegnati e non possono essere piu' usati
-per altre sottoscrizioni";
+t3OpenSubscribeLastPrice::usage = "t3OpenSubscribeLastPrice[T3OpenJavaObj,exchange,market,code] function
+subscribe last_price tcp schema, returns OK if subscription action is fine otherwise KO.
+When T3OpenJavaObj has a subscription running it can't be used for other subscription schema";
 
 
-t3OpenSubscribeBestBid1::usage =
-"t3OpenSubscribeBestBid1[myT3OpenObj_,exchange_,market_,code_];
-Sottoscrive lo schema best_bid1 alla piattaforma,
-restituisce il messaggio di OK o KO.
-A questo punto gli oggetti myT3OpenObj di com.t3.T3Open sono impegnati e non possono essere piu' usati
-per altre sottoscrizioni";
+t3OpenSubscribeBestBid1::usage = "t3OpenSubscribeBestBid1[T3OpenJavaObj,exchange,market,code] function
+subscribe best_bid1 tcp schema, returns OK if subscription action is fine otherwise KO.
+When T3OpenJavaObj has a subscription running it can't be used for other subscription schema";
 
 
-t3OpenSubscribeBestAsk1::usage =
-"t3OpenSubscribeBestAsk1[myT3OpenObj_,exchange_,market_,code_];
-Sottoscrive lo schema best_ask1 alla piattaforma,
-restituisce il messaggio di OK o KO.
-A questo punto gli oggetti myT3OpenObj di com.t3.T3Open sono impegnati e non possono essere piu' usati
-per altre sottoscrizioni";
+t3OpenSubscribeBestAsk1::usage = "t3OpenSubscribeBestAsk1[T3OpenJavaObj,exchange,market,code] function
+subscribe best_ask1 tcp schema, returns OK if subscription action is fine otherwise KO.
+When T3OpenJavaObj has a subscription running it can't be used for other subscription schema";
 
 
-t3OpenGetSubscribedData::usage =
-"t3OpenGetSubscribedData[myT3OpenObj_];
-effettua il refresh dei dati sottoscritti";
+t3OpenGetSubscribedData::usage = "t3OpenGetSubscribedData[T3OpenJavaObj] function;
+returns refreshed subscripted data";
 
 
-t3OpenUnsubscribe::usage = 
-"t3OpenUnsubscribe[myT3OpenObj_];
-desottoscrive l'informativa di myT3OpenObj, chiude il socket ed effetuua un Clear di myT3OpenObj";
+t3OpenUnsubscribe::usage = "t3OpenUnsubscribe[T3OpenJavaObj] function
+remove subscription and close the tcp socket removing T3OpenJava object";
 
 
-t3OpenGetHDailyClosePrice::usage = 
-"getHDailyClosePrice[market_String,exchange_String,code_String,fromDate_String,OptionsPattern[]];
-get historical daily close price.";
+t3OpenGetHDailyClosePrice::usage = "t3OpenGetHDailyClosePrice[market,exchange,code,fromDate] function
+get historical daily close price.
+Options[t3OpenGetHDailyClosePrice]";
 
 
-t3OpenGetHClosePrice1M::usage = 
-"getHClosePrice1M[market_String,exchange_String,code_String,fromDate_String,OptionsPattern[]];
-get historical intraday 1 minute close price.";
+t3OpenGetHClosePrice1M::usage = "t3OpenGetHClosePrice1M[market,exchange,code,fromDate] function
+get historical intraday 1 minute close price.
+Options[t3OpenGetHClosePrice1M]";
 
 
-t3OpenGetHClosePrice5M::usage = 
-"getHClosePrice5M[market_String,exchange_String,code_String,fromDate_String,OptionsPattern[]];
-get historical intraday 5 minute close price.";
+t3OpenGetHClosePrice5M::usage = "t3OpenGetHClosePrice5M[market,exchange,code,fromDate] function
+get historical intraday 5 minute close price.
+Options[t3OpenGetHClosePrice5M]";
 
 
-t3OpenGetDepositList::usage =
-"t3OpenGetDepositList[];
+t3OpenGetDepositList::usage = "t3OpenGetDepositList[] function
 returns the bond/security/stock deposit list (italian lista depositi).
-Options[t3OpenGetDepositList]={ipAddress->'127.0.0.1',httpPort->8333}";
+Options[t3OpenGetDepositList]";
 
 
-t3OpenGetFinanceSection::usage =
-"t3OpenGetFinanceSection[deposit_String,OptionsPattern[]];
+t3OpenGetFinanceSection::usage = "t3OpenGetFinanceSection[depositNumber] function;
 returns the finance section (italian lista delle rubriche) bounded with deposit list.
-Options[t3OpenGetFinanceSection]={ipAddress->'127.0.0.1',httpPort->8333}";
+Options[t3OpenGetFinanceSection]";
 
 
-t3OpenSubscribePortfolio::usage =
-"to completed";
+t3OpenSubscribePortfolio::usage = "t3OpenSubscribePortfolio[t3OpenJavaObj,depositNumber] function
+subscribe a T3Open java object to deposit";
 
 
-t3OpenUnsubscribePortfolio::usage =
-"to be completed";
+t3OpenSubscribePortfolioBalance::usage = "t3OpenSubscribePortfolioBalance[T3OpenJavaObj,depositNumber] function
+subscribe a T3Open java object to deposit";
 
 
-t3OpenSubscribePortfolioBalance::usage =
-"to be completed";
-
-
-t3OpenUnsubscribePortfolioBalance::usage =
-"to be completed";
-
-
-t3OpenSubscribeOrderBook::usage =
-"to be completed";
-
-
-t3OpenUnsubscribeOrderBook::usage =
-"to be completed";
+t3OpenSubscribeOrderBook::usage = "t3OpenSubscribeOrderBook[T3OpenJavaObj] function
+subscribe a T3Open java object to order book";
 
 
 Begin["Private`"];
@@ -418,19 +387,6 @@ Return[response];
 ];
 
 
-t3OpenUnsubscribePortfolio[myT3OpenObj_]:=Module[{i},
-(*send unsubscribe comand*)
-myT3OpenObj@getRefOutStream[]@println["function=unsubscribe_portfolio"];
-(*close java socket connection*)
-myT3OpenObj@getRefSocket[]@close[];
-(*release java object*)
-ReleaseJavaObject[myT3OpenObj];
-(*TODO Unsubscribe : must be corrected*)
-Return[myT3OpenObj];
-];
-SetAttributes[t3OpenUnsubscribePortfolio,Listable];
-
-
 t3OpenSubscribePortfolioBalance[myT3OpenObj_,deposit_]:= Module[
 {funSub,request,response},
 response={};
@@ -448,19 +404,6 @@ Return[response];
 ];
 
 
-t3OpenUnsubscribePortfolioBalance[myT3OpenObj_]:=Module[{i},
-(*send unsubscribe comand*)
-myT3OpenObj@getRefOutStream[]@println["function=unsubscribe_portfolio_balance"];
-(*close java socket connection*)
-myT3OpenObj@getRefSocket[]@close[];
-(*release java object*)
-ReleaseJavaObject[myT3OpenObj];
-(*TODO Unsubscribe : must be corrected*)
-Return[myT3OpenObj];
-];
-SetAttributes[t3OpenUnsubscribePortfolioBalance,Listable];
-
-
 t3OpenSubscribeOrderBook[myT3OpenObj_,deposit_]:= Module[
 {funSub,request,response},
 response={};
@@ -476,21 +419,6 @@ response = myT3OpenObj@getRefBufReader[]@readLine[];
 (*response = Take[Flatten[StringSplit[response,"|"]],-1];*)
 Return[response];
 ];
-
-
-t3OpenUnsubscribeOrderBook[myT3OpenObj_]:=Module[{i},
-(*send unsubscribe comand*)
-myT3OpenObj@getRefOutStream[]@println["function=unsubscribe_orderbook"];
-(*close java socket connection*)
-myT3OpenObj@getRefSocket[]@close[];
-(*release java object*)
-ReleaseJavaObject[myT3OpenObj];
-(*TODO Unsubscribe : must be corrected*)
-Return[myT3OpenObj];
-];
-
-
-SetAttributes[t3OpenUnsubscribeOrderBook,Listable];
 
 
 End[];
