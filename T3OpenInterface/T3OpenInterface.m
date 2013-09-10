@@ -22,7 +22,7 @@ returns T3Open market list.
 Options[t3OpenGetMarketList]";
 
 
-borsaItalianaGetLottiMinimi::usage = "borsaItalianaGetLottiMinimi[] a non T3Opne function
+borsaItalianaGetLottiMinimi::usage = "borsaItalianaGetLottiMinimi[] a non T3Open function
 returns isoalpha (american options) minimum number of stocks, download data from borsaitaliana.it
 Options[borsaItalianaGetLottiMinimi]";
 
@@ -37,17 +37,17 @@ t3OpenSubscribe::usage = "t3OpenSubscribe[T3OpenJavaObj,exchange,market,code,sch
 subscribe tcp data to T3Open code and schema, if subscription action is fine return OK";
 
 
-t3OpenSubscribeLastPrice::usage = "t3OpenSubscribeLastPrice[T3OpenJavaObj,exchange,market,code] function
+t3OpenSubscribeLastPrice::usage = "t3OpenSubscribeLastPrice[t3OpenJavaObj,exchange,market,code] function
 subscribe last_price tcp schema, returns OK if subscription action is fine otherwise KO.
 When T3OpenJavaObj has a subscription running it can't be used for other subscription schema";
 
 
-t3OpenSubscribeBestBid1::usage = "t3OpenSubscribeBestBid1[T3OpenJavaObj,exchange,market,code] function
+t3OpenSubscribeBestBid1::usage = "t3OpenSubscribeBestBid1[t3OpenJavaObj,exchange,market,code] function
 subscribe best_bid1 tcp schema, returns OK if subscription action is fine otherwise KO.
 When T3OpenJavaObj has a subscription running it can't be used for other subscription schema";
 
 
-t3OpenSubscribeBestAsk1::usage = "t3OpenSubscribeBestAsk1[T3OpenJavaObj,exchange,market,code] function
+t3OpenSubscribeBestAsk1::usage = "t3OpenSubscribeBestAsk1[t3OpenJavaObj,exchange,market,code] function
 subscribe best_ask1 tcp schema, returns OK if subscription action is fine otherwise KO.
 When T3OpenJavaObj has a subscription running it can't be used for other subscription schema";
 
@@ -56,7 +56,7 @@ t3OpenGetSubscribedData::usage = "t3OpenGetSubscribedData[T3OpenJavaObj] functio
 returns refreshed subscripted data";
 
 
-t3OpenUnsubscribe::usage = "t3OpenUnsubscribe[T3OpenJavaObj] function
+t3OpenUnsubscribe::usage = "t3OpenUnsubscribe[t3OpenJavaObj] function
 remove subscription and close the tcp socket removing T3OpenJava object";
 
 
@@ -93,7 +93,7 @@ t3OpenSubscribePortfolioBalance::usage = "t3OpenSubscribePortfolioBalance[T3Open
 subscribe a T3Open java object to deposit";
 
 
-t3OpenSubscribeOrderBook::usage = "t3OpenSubscribeOrderBook[T3OpenJavaObj] function
+t3OpenSubscribeOrderBook::usage = "t3OpenSubscribeOrderBook[t3OpenJavaObj] function
 subscribe a T3Open java object to order book";
 
 
