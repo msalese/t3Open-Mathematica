@@ -166,22 +166,22 @@ Options[t3OpenGetStatus]={IpAdrress->"127.0.0.1",HttpPort->8333};
 Options[t3OpenGetMarketList]={IpAdrress->"127.0.0.1",HttpPort->8333};
 
 
-Options[t3OpenGetTickerByName]={IpAdrress->"127.0.0.1",HttpPort->8333,type->"N"};
+Options[t3OpenGetTickerByName]={IpAdrress->"127.0.0.1",HttpPort->8333,Type->"N"};
 
 
-Options[t3OpenGetTickerBySymbol]={IpAdrress->"127.0.0.1",HttpPort->8333,type->"S"};
+Options[t3OpenGetTickerBySymbol]={IpAdrress->"127.0.0.1",HttpPort->8333,Type->"S"};
 
 
 Options[t3OpenObject]={IpAdrress->"127.0.0.1",TcpPort->5333,SoTimeOut->250};
 
 
-Options[t3OpenGetHDailyClosePrice]={IpAdrress->"127.0.0.1",HttpPort->8333,frequency->"1D"};
+Options[t3OpenGetHDailyClosePrice]={IpAdrress->"127.0.0.1",HttpPort->8333,Frequency->"1D"};
 
 
-Options[t3OpenGetHClosePrice1M]={IpAdrress->"127.0.0.1",HttpPort->8333,frequency->"1M"};
+Options[t3OpenGetHClosePrice1M]={IpAdrress->"127.0.0.1",HttpPort->8333,Frequency->"1M"};
 
 
-Options[t3OpenGetHClosePrice5M]={IpAdrress->"127.0.0.1",HttpPort->8333,frequency->"5M"};
+Options[t3OpenGetHClosePrice5M]={IpAdrress->"127.0.0.1",HttpPort->8333,Frequency->"5M"};
 
 
 Options[t3OpenGetDepositList]={IpAdrress->"127.0.0.1",HttpPort->8333};
@@ -236,10 +236,10 @@ Return[marketList];
 
 
 t3OpenGetTickerByName[exchange_String,market_String,pattern_String,OptionsPattern[]]:=Module[
-{ipAddress,httpPort,command,command01,sendCommand,searchList},
-{ipAddress,httpPort}=OptionValue[{IpAdrress,HttpPort}];
+{ipAddress,httpPort,type,command,command01,sendCommand,searchList},
+{ipAddress,httpPort,type}=OptionValue[{IpAdrress,HttpPort,Type}];
 command = "search";
-command01 = StringJoin[command,"?borsa=",exchange,"&mercato=",market,"&tipoRicerca=",ToString[OptionValue[type]],"&pattern=",pattern];
+command01 = StringJoin[command,"?borsa=",exchange,"&mercato=",market,"&tipoRicerca=",ToString[type],"&pattern=",pattern];
 sendCommand = StringJoin[{"http://",ToString[ipAddress],":",ToString[httpPort],"/T3OPEN/",command01}];
 searchList= Import[sendCommand];
 Return[searchList];
@@ -247,10 +247,10 @@ Return[searchList];
 
 
 t3OpenGetTickerBySymbol[exchange_String,market_String,pattern_String,OptionsPattern[]]:=Module[
-{ipAddress,httpPort,command,command01,sendCommand,searchList},
-{ipAddress,httpPort}=OptionValue[{IpAdrress,HttpPort}];
+{ipAddress,httpPort,type,command,command01,sendCommand,searchList},
+{ipAddress,httpPort,type}=OptionValue[{IpAdrress,HttpPort,Type}];
 command = "search";
-command01 = StringJoin[command,"?borsa=",exchange,"&mercato=",market,"&tipoRicerca=",ToString[OptionValue[type]],"&pattern=",pattern];
+command01 = StringJoin[command,"?borsa=",exchange,"&mercato=",market,"&tipoRicerca=",ToString[type],"&pattern=",pattern];
 sendCommand = StringJoin[{"http://",ToString[ipAddress],":",ToString[httpPort],"/T3OPEN/",command01}];
 searchList= Import[sendCommand];
 Return[searchList];
@@ -370,14 +370,14 @@ SetAttributes[t3OpenUnsubscribe,Listable];
 
 
 t3OpenGetHDailyClosePrice[market_String,exchange_String,code_String,fromDate_String,OptionsPattern[]]:=Module[
-{ipAddress,httpPort,command,data01,data02,data03,counter,close,closeDate,dataToPlot,toDay,fromDateF,fromDateF1,ohlc},
-{ipAddress,httpPort}=OptionValue[{IpAdrress,HttpPort}];
+{ipAddress,httpPort,frequency,command,data01,data02,data03,counter,close,closeDate,dataToPlot,toDay,fromDateF,fromDateF1,ohlc},
+{ipAddress,httpPort,frequency}=OptionValue[{IpAdrress,HttpPort,Frequency}];
 (*check fromDate value*)
 toDay = DateList[DateString[DateList[],{"Year","Month","Day"}]];
 fromDateF = DateList[{fromDate,{"Year","","Month","","Day"}}];
 fromDateF1 = If[DateDifference[fromDateF,toDay,"Year"][[1]]<=10,fromDate,DateString[DatePlus[toDay,{-10,"Year" }],{"Year","","Month","","Day"}]];
 (*send http command*)
-command = StringJoin["http://",ToString[ipAddress],":",ToString[httpPort],"/T3OPEN/get_history?item=",market,".",exchange,".",ToString[code],"&frequency=",OptionValue[frequency],"&dataDa=",fromDate];
+command = StringJoin["http://",ToString[ipAddress],":",ToString[httpPort],"/T3OPEN/get_history?item=",market,".",exchange,".",ToString[code],"&frequency=",frequency,"&dataDa=",fromDate];
 data01 =Import[command];
 data01 =Drop[data01,1];
 data02 = Table[StringSplit[data01[[i]],"element="],{i,1,Dimensions[data01][[1]]}];
@@ -394,14 +394,14 @@ Return[dataToPlot];
 
 
 t3OpenGetHClosePrice1M[market_String,exchange_String,code_String,fromDate_String,OptionsPattern[]]:=Module[
-{ipAddress,httpPort,command,data01,data02,data03,counter,close,closeDate,dataToPlot,toDay,fromDateF,fromDateF1},
-{ipAddress,httpPort}=OptionValue[{IpAdrress,HttpPort}];
+{ipAddress,httpPort,frequency,command,data01,data02,data03,counter,close,closeDate,dataToPlot,toDay,fromDateF,fromDateF1},
+{ipAddress,httpPort,frequency,}=OptionValue[{IpAdrress,HttpPort,Frequency}];
 (*check fromDate value*)
 toDay = DateList[DateString[DateList[],{"Year","Month","Day"}]];
 fromDateF = DateList[{fromDate,{"Year","","Month","","Day"}}];
 fromDateF1 = If[DateDifference[fromDateF,toDay,"Day"][[1]]<=3,fromDate,DateString[DatePlus[toDay,{-3,"Day" }],{"Year","","Month","","Day"}]];
 (*send http command*)
-command = StringJoin["http://",ToString[ipAddress],":",ToString[httpPort],"/T3OPEN/get_history?item=",market,".",exchange,".",ToString[code],"&frequency=",OptionValue[frequency],"&dataDa=",fromDate];
+command = StringJoin["http://",ToString[ipAddress],":",ToString[httpPort],"/T3OPEN/get_history?item=",market,".",exchange,".",ToString[code],"&frequency=",frequency,"&dataDa=",fromDate];
 data01 =Import[command];
 data01 =Drop[data01,1];
 data02 = Table[StringSplit[data01[[i]],"element="],{i,1,Dimensions[data01][[1]]}];
@@ -418,14 +418,14 @@ Return[dataToPlot];
 
 
 t3OpenGetHClosePrice5M[market_String,exchange_String,code_String,fromDate_String,OptionsPattern[]]:=Module[
-{ipAddress,httpPort,command,data01,data02,data03,counter,close,closeDate,dataToPlot,toDay,fromDateF,fromDateF1},
-{ipAddress,httpPort}=OptionValue[{IpAdrress,HttpPort}];
+{ipAddress,httpPort,frequency,command,data01,data02,data03,counter,close,closeDate,dataToPlot,toDay,fromDateF,fromDateF1},
+{ipAddress,httpPort,frequency,}=OptionValue[{IpAdrress,HttpPort,Frequency}];
 (*check fromDate value*)
 toDay = DateList[DateString[DateList[],{"Year","Month","Day"}]];
 fromDateF = DateList[{fromDate,{"Year","","Month","","Day"}}];
 fromDateF1 = If[DateDifference[fromDateF,toDay,"Day"][[1]]<=3,fromDate,DateString[DatePlus[toDay,{-30,"Day" }],{"Year","","Month","","Day"}]];
 (*send http command*)
-command = StringJoin["http://",ToString[ipAddress],":",ToString[httpPort],"/T3OPEN/get_history?item=",market,".",exchange,".",ToString[code],"&frequency=",OptionValue[frequency],"&dataDa=",fromDateF1];
+command = StringJoin["http://",ToString[ipAddress],":",ToString[httpPort],"/T3OPEN/get_history?item=",market,".",exchange,".",ToString[code],"&frequency=",frequency,"&dataDa=",fromDateF1];
 data01 =Import[command];
 data01 =Drop[data01,1];
 data02 = Table[StringSplit[data01[[i]],"element="],{i,1,Dimensions[data01][[1]]}];
