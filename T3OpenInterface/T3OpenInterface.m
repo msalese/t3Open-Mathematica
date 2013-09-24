@@ -196,7 +196,7 @@ Options[t3OpenGetFinanceSection]={IpAddress->"127.0.0.1",HttpPort->8333};
 Begin["Private`"];
 
 
-ReinstallJava[CommandLine->"E:\\Java\\jre7\\bin\\javaw.exe"];
+ReinstallJava[CommandLine->"E:\\Java\\64\\jre7\\bin\\javaw.exe"];
 
 
 If[$SystemID=="Windows-x86-64",
@@ -632,9 +632,24 @@ lastPrice = Table[t3OpenGetSubscribedData[subData[[i,7]]],{i,1,Length[data]}];
 bestBid1 = Table[t3OpenGetSubscribedData[subData[[i,8]]],{i,1,Length[data]}];
 bestAsk1 = Table[t3OpenGetSubscribedData[subData[[i,9]]],{i,1,Length[data]}];
 (*here we should check if lastPrice is null, if null you have to request again*)
-If[MemberQ[lastPrice,{Null}],Return[1];Abort[]];
-If[MemberQ[bestBid1,{Null}],Return[1];Abort[]];
-If[MemberQ[bestAsk1,{Null}],Return[1];Abort[]];
+If[MemberQ[lastPrice,{Null}],
+	Table[t3OpenUnsubscribe[subData[[i,4]]],{i,1,Length[data]}];
+	Table[t3OpenUnsubscribe[subData[[i,5]]],{i,1,Length[data]}];
+	Table[t3OpenUnsubscribe[subData[[i,6]]],{i,1,Length[data]}];
+	Return[1];
+];
+If[MemberQ[bestBid1,{Null}],
+	Table[t3OpenUnsubscribe[subData[[i,4]]],{i,1,Length[data]}];
+	Table[t3OpenUnsubscribe[subData[[i,5]]],{i,1,Length[data]}];
+	Table[t3OpenUnsubscribe[subData[[i,6]]],{i,1,Length[data]}];
+	Return[1];
+];
+If[MemberQ[bestAsk1,{Null}],
+	Table[t3OpenUnsubscribe[subData[[i,4]]],{i,1,Length[data]}];
+	Table[t3OpenUnsubscribe[subData[[i,5]]],{i,1,Length[data]}];
+	Table[t3OpenUnsubscribe[subData[[i,6]]],{i,1,Length[data]}];
+	Return[1];
+];
 (*format for better output*)
 lastPrice01 = Table[StringSplit[lastPrice[[i]],"|"],{i,1,Length[data]}];
 bestBid101 = Table[StringSplit[bestBid1[[i]],"|"],{i,1,Length[data]}];
@@ -652,7 +667,8 @@ finalPutChain01 = Prepend[Transpose[finalPutChain],{"LastUpdateTime","Symbol","L
 Table[t3OpenUnsubscribe[subData[[i,4]]],{i,1,Length[data]}];
 Table[t3OpenUnsubscribe[subData[[i,5]]],{i,1,Length[data]}];
 Table[t3OpenUnsubscribe[subData[[i,6]]],{i,1,Length[data]}];
-Return[finalPutChain01];
+(*Return[finalPutChain01];*)
+Return[subData];
 ];
 
 
