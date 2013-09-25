@@ -11,7 +11,7 @@ public class runTest {
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		t3Open my = new t3Open("192.168.0.78",5333,1000,1000);
+		t3Open my = new t3Open("192.168.0.78",5333,200,200);
 		System.out.println("created t3Open object");
 		System.out.println(my.getIpAddress());
 		System.out.println(my.getPortNumber());
