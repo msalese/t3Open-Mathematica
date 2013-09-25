@@ -172,7 +172,7 @@ Options[t3OpenGetTickerByName]={IpAddress->"127.0.0.1",HttpPort->8333,Type->"N"}
 Options[t3OpenGetTickerBySymbol]={IpAddress->"127.0.0.1",HttpPort->8333,Type->"S"};
 
 
-Options[t3OpenObject]={IpAddress->"127.0.0.1",TcpPort->5333,SoTimeOut->250,WaitBeforeRead->500};
+Options[t3OpenObject]={IpAddress->"127.0.0.1",TcpPort->5333,SoTimeOut->200,WaitBeforeRead->200};
 
 
 Options[t3OpenGetHDailyClosePrice]={IpAddress->"127.0.0.1",HttpPort->8333,Frequency->"1D"};
@@ -196,15 +196,15 @@ Options[t3OpenGetFinanceSection]={IpAddress->"127.0.0.1",HttpPort->8333};
 Begin["Private`"];
 
 
+InstallJava[];
+
+
 If[$SystemID=="Windows-x86-64",
-	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"\\T3OpenInterface\\Java\\64"],
-	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"/T3OpenInterface/Java/64"]
-];
-
-
+	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"\\Applications\\T3OpenInterface\\Java\\64"],
 If[$SystemID=="Windows-x86",
-	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"\\T3OpenInterface\\Java\\32"],
-	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"/T3OpenInterface/Java/32"]
+	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"\\Applications\\T3OpenInterface\\Java\\32"],
+	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"/Applications/T3OpenInterface/Java/64"]
+]
 ];
 
 
@@ -270,11 +270,11 @@ Return[lottiMinimi02];
 ];
 
 
-t3OpenObject[codeList_,OptionsPattern[]]:=Module[{ipAddress,tcpPort,soTimeOut,objList,codeList02},
-{ipAddress,tcpPort,soTimeOut}=OptionValue[{IpAddress,TcpPort,SoTimeOut}];
+t3OpenObject[codeList_,OptionsPattern[]]:=Module[{ipAddress,tcpPort,soTimeOut,waitBeforeRead,objList,codeList02},
+{ipAddress,tcpPort,soTimeOut,waitBeforeRead}=OptionValue[{IpAddress,TcpPort,SoTimeOut,WaitBeforeRead}];
 (*check argument*)
 If[MatrixQ[codeList]==False,Message[t3OpenObject::badarg, codeList];Return[1]];
-objList=Table[JavaNew["com.t3.t3Open",MakeJavaObject[ipAddress],MakeJavaObject[tcpPort],MakeJavaObject[soTimeOut]],{i,1,Dimensions[codeList][[1]]}];
+objList=Table[JavaNew["com.t3.t3Open",MakeJavaObject[ipAddress],MakeJavaObject[tcpPort],MakeJavaObject[soTimeOut],MakeJavaObject[waitBeforeRead]],{i,1,Dimensions[codeList][[1]]}];
 Table[objList[[i]]@openConnection[],{i,1,Dimensions[objList][[1]]}];
 codeList02 = Table[Append[codeList[[i]],objList[[i]]],{i,1,Dimensions[objList][[1]]}];
 Return[codeList02];
@@ -287,15 +287,13 @@ response={};
 funSub= "function=subscribe|item=";
 (*build the string request to send*)
 request =StringJoin[{funSub,exchange,".",market,".",code,"|schema=","last_price"}];
-(*set poolingWhat attribute*)
-myT3OpenObj@setPoolingWhat["last_price"];
-(*send the request*)
-(*myT3OpenObj@getRefOutStream[]@println[request];*)
-(*read the first response*)
-(*response = myT3OpenObj@getRefBufReader[]@readLine[];*)
-myT3OpenObj@getSubscribedData[];
-response = myT3OpenObj@getPooledData[];
-(*response = Take[Flatten[StringSplit[response,"|"]],-1];*)
+
+(*set the request*)
+myT3OpenObj@setRequest[request];
+(* call subsribeData method *)
+myT3OpenObj@subscribeData[];
+(* read the pushedData field *)
+response = myT3OpenObj@getPushedData[];
 Return[response];
 ];
 
