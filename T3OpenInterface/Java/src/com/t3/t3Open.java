@@ -18,7 +18,7 @@ public class t3Open {
 	private Socket refSocket;
 	private Integer socketTimeOut;
 	private PrintWriter refOutStream;
-	private InputStreamReader refImputStreamReader;
+	private InputStreamReader refInputStreamReader;
 	private BufferedReader refBufReader;
 	private Boolean closeStatus;
 	private Boolean connectionStatus;
@@ -39,11 +39,11 @@ public class t3Open {
 		super();
 		this.ipAddress = ipAddress;
 		this.portNumber = portNumber;
-		this.socketTimeOut = socketTimeOut;
-		this.refBufReader = null;
-		this.refOutStream = null;
-		this.refImputStreamReader = null;
 		this.refSocket = null;
+		this.refOutStream = null;
+		this.refInputStreamReader = null;
+		this.refBufReader = null;
+		this.socketTimeOut = socketTimeOut;
 		this.closeStatus = null;
 		this.connectionStatus = null;
 		this.waitBeforeRead =  waitBeforeRead;
@@ -53,7 +53,21 @@ public class t3Open {
 	}
 	
 	
-	
+	/**
+	 * @return the waitBeforeRead
+	 */
+	public Integer getWaitBeforeRead() {
+		return waitBeforeRead;
+	}
+
+
+	/**
+	 * @param waitBeforeRead the waitBeforeRead to set
+	 */
+	public void setWaitBeforeRead(Integer waitBeforeRead) {
+		this.waitBeforeRead = waitBeforeRead;
+	}
+
 	/**
 	 * @return the closeStatus
 	 */
@@ -62,11 +76,10 @@ public class t3Open {
 	}
 
 
-
 	/**
-	 * @return the conenctionStatus
+	 * @return the connectionStatus
 	 */
-	public Boolean getConenctionStatus() {
+	public Boolean getConnectionStatus() {
 		return connectionStatus;
 	}
 	
@@ -157,24 +170,28 @@ public class t3Open {
 	//send request	
 	refOutStream.println(this.request);	
 	
-	//read response
+	
 	try{
+		//read first response
 		this.response = this.refBufReader.readLine();
+		
+		//sleep otherwise is too fast
 		try { 
 			Thread.sleep(this.waitBeforeRead); 
-			} catch(InterruptedException e) { 
-			} 
-		while (this.refBufReader.ready()){
-			this.pushedData = this.refBufReader.readLine();
-			}
+		}
+		catch(InterruptedException e) { 
+		} 
 		
+		//check if bufferedReader is ready
+		while (this.refBufReader.ready()){
+			//if ready red the second response and put it in pushedData field
+			this.pushedData = this.refBufReader.readLine();
+		}
+		
+		//if second response is null set it to zero
 		if(this.pushedData == null){
 			this.pushedData = Integer.toString(0);
 		}
-		
-	//after response unsubscribe	
-	this.unsubscribe();	
-	
 	}	
 	catch(SocketTimeoutException e){
 		this.response = "timeOut";
@@ -203,17 +220,11 @@ public class t3Open {
 		this.connectionStatus = this.refSocket.isConnected();
 	
 		this.refOutStream = new PrintWriter(this.refSocket.getOutputStream(),true);
-		//PrintWriter myOutStream = new PrintWriter(mySocket.getOutputStream(),true);
-		//this.setRefOutStream(myOutStream);
-		
-		this.refImputStreamReader = new InputStreamReader(this.refSocket.getInputStream());
-		//InputStreamReader myInputStreamReader = new InputStreamReader(mySocket.getInputStream());
-		
-		this.refBufReader = new  BufferedReader(this.refImputStreamReader);
-		//BufferedReader myBufferedInputStreamReader = new BufferedReader(myInputStreamReader);
-		//this.setRefBufReader(myBufferedInputStreamReader);
-		
 				
+		this.refInputStreamReader = new InputStreamReader(this.refSocket.getInputStream());
+				
+		this.refBufReader = new  BufferedReader(this.refInputStreamReader);
+						
 		
 	}
 	catch(UnknownHostException e) {
