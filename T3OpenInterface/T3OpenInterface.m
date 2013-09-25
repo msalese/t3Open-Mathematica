@@ -172,7 +172,7 @@ Options[t3OpenGetTickerByName]={IpAddress->"127.0.0.1",HttpPort->8333,Type->"N"}
 Options[t3OpenGetTickerBySymbol]={IpAddress->"127.0.0.1",HttpPort->8333,Type->"S"};
 
 
-Options[t3OpenObject]={IpAddress->"127.0.0.1",TcpPort->5333,SoTimeOut->250};
+Options[t3OpenObject]={IpAddress->"127.0.0.1",TcpPort->5333,SoTimeOut->250,WaitBeforeRead->500};
 
 
 Options[t3OpenGetHDailyClosePrice]={IpAddress->"127.0.0.1",HttpPort->8333,Frequency->"1D"};
@@ -196,18 +196,15 @@ Options[t3OpenGetFinanceSection]={IpAddress->"127.0.0.1",HttpPort->8333};
 Begin["Private`"];
 
 
-ReinstallJava[CommandLine->"E:\\Java\\64\\jre7\\bin\\javaw.exe"];
-
-
 If[$SystemID=="Windows-x86-64",
-	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"\\T3OpenInterface\\Java"],
-	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"/T3OpenInterface/Java"]
+	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"\\T3OpenInterface\\Java\\64"],
+	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"/T3OpenInterface/Java/64"]
 ];
 
 
-If[$SystemID=="Windows-x86-64",
-	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"\\T3OpenInterface\\Java"],
-	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"/T3OpenInterface/Java"]
+If[$SystemID=="Windows-x86",
+	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"\\T3OpenInterface\\Java\\32"],
+	t3OpenInterfaceJavaClassPath=StringJoin[$BaseDirectory,"/T3OpenInterface/Java/32"]
 ];
 
 
@@ -273,14 +270,6 @@ Return[lottiMinimi02];
 ];
 
 
-beforet3OpenObject[codeList_]:=Module[{ab,absym,ab2},
-ab = Table[Append[codeList[[i]],Symbol[StringJoin["c",StringDrop[ToString[codeList[[i,1]]],-1],"LastPrice"]]],{i,1,Dimensions[codeList][[1]]}];
-(*absym = Table[Symbol[ab[[i,3]]],{i,1,Dimensions[codeList][[1]]}];*)
-(*ab2 = Table[Append[ab[[i]],absym[[i]]],{i,1,Dimensions[ab][[1]]}];*)
-Return[ab];
-];
-
-
 t3OpenObject[codeList_,OptionsPattern[]]:=Module[{ipAddress,tcpPort,soTimeOut,objList,codeList02},
 {ipAddress,tcpPort,soTimeOut}=OptionValue[{IpAddress,TcpPort,SoTimeOut}];
 (*check argument*)
@@ -288,8 +277,6 @@ If[MatrixQ[codeList]==False,Message[t3OpenObject::badarg, codeList];Return[1]];
 objList=Table[JavaNew["com.t3.t3Open",MakeJavaObject[ipAddress],MakeJavaObject[tcpPort],MakeJavaObject[soTimeOut]],{i,1,Dimensions[codeList][[1]]}];
 Table[objList[[i]]@openConnection[],{i,1,Dimensions[objList][[1]]}];
 codeList02 = Table[Append[codeList[[i]],objList[[i]]],{i,1,Dimensions[objList][[1]]}];
-Table[codeList02[[All,3]][[i]]@setPoolingWhatSymbol[codeList[[All,2]][[i]]],{i,1,Dimensions[codeList02[[All,3]]][[1]]}];
-Table[codeList02[[All,3]][[i]]@setPoolingWhatCode[codeList[[All,1]][[i]]],{i,1,Dimensions[codeList02[[All,3]]][[1]]}];
 Return[codeList02];
 ];
 
