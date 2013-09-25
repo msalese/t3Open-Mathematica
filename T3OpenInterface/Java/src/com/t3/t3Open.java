@@ -14,34 +14,81 @@ import java.io.*;
 public class t3Open {
 	
 	private String ipAddress;
-	private Integer	 portNumber;
+	private Integer	portNumber;
 	private Socket refSocket;
 	private Integer socketTimeOut;
 	private PrintWriter refOutStream;
+	private InputStreamReader refImputStreamReader;
 	private BufferedReader refBufReader;
-	private String poolingWhat;
-	private String poolingWhatCode;
-	private String poolingWhatSymbol;
-	private String pooledData;
+	private Boolean closeStatus;
+	private Boolean connectionStatus;
+	private Integer waitBeforeRead;
+	private String pushedData;
+	private String response;
+	private String request;
 	
-		
+	
+
+
 	/**
 	 * @param ipAddress
 	 * @param portNumber
 	 * @param socketTimeOut
 	 */
-	public t3Open(String ipAddress,Integer portNumber,Integer socketTimeOut) {
+	public t3Open(String ipAddress,Integer portNumber,Integer socketTimeOut, Integer waitBeforeRead) {
 		super();
 		this.ipAddress = ipAddress;
 		this.portNumber = portNumber;
 		this.socketTimeOut = socketTimeOut;
 		this.refBufReader = null;
 		this.refOutStream = null;
+		this.refImputStreamReader = null;
 		this.refSocket = null;
-		this.poolingWhat = null;
-		this.poolingWhatCode = null;
-		this.poolingWhatSymbol = null;
-		this.pooledData = null;
+		this.closeStatus = null;
+		this.connectionStatus = null;
+		this.waitBeforeRead =  waitBeforeRead;
+		this.pushedData = null;
+		this.response = null;
+		this.request = null;
+	}
+	
+	
+	
+	/**
+	 * @return the closeStatus
+	 */
+	public Boolean getCloseStatus() {
+		return closeStatus;
+	}
+
+
+
+	/**
+	 * @return the conenctionStatus
+	 */
+	public Boolean getConenctionStatus() {
+		return connectionStatus;
+	}
+	
+	/**
+	 * @return the request
+	 */
+	public String getRequest() {
+		return request;
+	}
+
+	/**
+	 * @param request the request to set
+	 */
+	public void setRequest(String request) {
+		this.request = request;
+	}
+
+	/**
+	 * @return the response
+	 */
+	public String getResponse() {
+		return response;
 	}
 	
 	/**
@@ -73,53 +120,15 @@ public class t3Open {
 		return refBufReader;
 	}
 
-	/**
-	 * @param refBufReader the refBufReader to set
-	 */
-	public void setRefBufReader(BufferedReader refBufReader) {
-		this.refBufReader = refBufReader;
-	}
-
-	
-	public String getPoolingWhat() {
-		return poolingWhat;
-	}
-
-	public void setPoolingWhat(String poolingWhat) {
-		this.poolingWhat = poolingWhat;
-	}
-
-	public String getPoolingWhatCode() {
-		return poolingWhatCode;
-	}
-	
 	
 	/**
 	 * @return the pooledData
 	 */
-	public String getPooledData() {
-		return pooledData;
+	public String getPushedData() {
+		return pushedData;
 	}
 
-	/**
-	 * @param pooledData the pooledData to set
-	 */
-	private void setPooledData(String pooledData) {
-		this.pooledData = pooledData;
-	}
-
-	public void setPoolingWhatCode(String pooligWhatCode) {
-		this.poolingWhatCode = pooligWhatCode;
-	}
-
-	public String getPoolingWhatSymbol() {
-		return poolingWhatSymbol;
-	}
-
-	public void setPoolingWhatSymbol(String poolingWhatSymbol) {
-		this.poolingWhatSymbol = poolingWhatSymbol;
-	}
-
+	
 	public String getIpAddress(){
 		 return this.ipAddress;
 	}
@@ -136,48 +145,74 @@ public class t3Open {
 		return this.socketTimeOut;
 	}
 	
-	public void setRefSocket(Socket mySocket){
-		this.refSocket = mySocket;
-	}
-	
+
 	public PrintWriter getRefOutStream(){
 		return this.refOutStream;
 	}
 	
-	public void setRefOutStream(PrintWriter myOutStream){
-		this.refOutStream = myOutStream;
-	}
 	
 	
-	public void getSubscribedData(){
-
-	try{	
-		this.pooledData = refBufReader.readLine();
-	}
+	public void subscribeData(){
+	
+	//send request	
+	refOutStream.println(this.request);	
+	
+	//read response
+	try{
+		this.response = this.refBufReader.readLine();
+		try { 
+			Thread.sleep(this.waitBeforeRead); 
+			} catch(InterruptedException e) { 
+			} 
+		while (this.refBufReader.ready()){
+			this.pushedData = this.refBufReader.readLine();
+			}
+		
+		if(this.pushedData == null){
+			this.pushedData = Integer.toString(0);
+		}
+		
+	//after response unsubscribe	
+	this.unsubscribe();	
+	
+	}	
 	catch(SocketTimeoutException e){
-		this.pooledData = this.pooledData;	
+		this.response = "timeOut";
 	}
 	catch (IOException e) {
-		this.pooledData = "error";
+		this.pushedData = "error";
 
     }
 		
+	}
+	
+	public void unsubscribe(){
+		this.refOutStream.println("function=unsubscribe");
 	}
 	
 	
 	public void openConnection(){
 		
 	try{
-		Socket mySocket = new Socket(this.getIpAddress(),this.getPortNumber());
-		mySocket.setSoTimeout(this.getSocketTimeOut());
-		this.setRefSocket(mySocket);
-		PrintWriter myOutStream = new PrintWriter(mySocket.getOutputStream(),true);
-		this.setRefOutStream(myOutStream);
 		
-		InputStreamReader myInputStreamReader = new InputStreamReader(mySocket.getInputStream());
-		BufferedReader myBufferedInputStreamReader = new BufferedReader(myInputStreamReader);
+		this.refSocket = new Socket(this.ipAddress,this.portNumber);
+		//Socket mySocket = new Socket(this.ipAddress,this.portNumber);
+				
+		this.refSocket.setSoTimeout(this.socketTimeOut);  
+		this.closeStatus = this.refSocket.isClosed();
+		this.connectionStatus = this.refSocket.isConnected();
+	
+		this.refOutStream = new PrintWriter(this.refSocket.getOutputStream(),true);
+		//PrintWriter myOutStream = new PrintWriter(mySocket.getOutputStream(),true);
+		//this.setRefOutStream(myOutStream);
 		
-		this.setRefBufReader(myBufferedInputStreamReader);
+		this.refImputStreamReader = new InputStreamReader(this.refSocket.getInputStream());
+		//InputStreamReader myInputStreamReader = new InputStreamReader(mySocket.getInputStream());
+		
+		this.refBufReader = new  BufferedReader(this.refImputStreamReader);
+		//BufferedReader myBufferedInputStreamReader = new BufferedReader(myInputStreamReader);
+		//this.setRefBufReader(myBufferedInputStreamReader);
+		
 				
 		
 	}
@@ -190,9 +225,20 @@ public class t3Open {
 
 	}
 	
+	public void closeConnection(){
+	try{
+		this.connectionStatus = this.refSocket.isConnected();
+		this.closeStatus = this.refSocket.isClosed();
+		this.refSocket.close();
+		this.connectionStatus = this.refSocket.isConnected();
+		this.closeStatus = this.refSocket.isClosed();
+	}
+	catch(IOException e){
+		 System.err.println("Couldn't get I/O for the connection.");
+	}
 	
+	}
 	
-	
-	
+		
 
 }
