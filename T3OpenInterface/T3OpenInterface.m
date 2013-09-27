@@ -44,6 +44,12 @@ Options[t3OpenObject]";
 t3OpenObject::badarg = "The argument `1` is not a list of list.";
 
 
+t3OpenObjectT::usage = "t3OpenObjectT[codeList] function with multi threads
+returns a java object (or a list of java object) from class com.t3.T3OpenT and execute openConnection() method
+which open a tcp socket to T3OpenT platform, objList must be a list of couples {{code,symbol}}.
+Options[t3OpenObjectT]";
+
+
 t3OpenSubscribe::usage = "t3OpenSubscribe[T3OpenJavaObj,exchange,market,code,schema] function
 subscribe tcp data to T3Open code and schema, if subscription action is fine return OK";
 
@@ -61,6 +67,9 @@ When T3OpenJavaObj has a subscription running it can't be used for other subscri
 t3OpenSubscribeBestAsk1::usage = "t3OpenSubscribeBestAsk1[t3OpenJavaObj,exchange,market,code] function
 subscribe best_ask1 tcp schema, returns OK if subscription action is fine otherwise KO.
 When T3OpenJavaObj has a subscription running it can't be used for other subscription schema";
+
+
+t3OpenRefresh::usage = "t3OpenRefresh[myT3OpenObj] function ";
 
 
 t3OpenGetSubscribedData::usage = "t3OpenGetSubscribedData[T3OpenJavaObj] function;
@@ -172,7 +181,10 @@ Options[t3OpenGetTickerByName]={IpAddress->"127.0.0.1",HttpPort->8333,Type->"N"}
 Options[t3OpenGetTickerBySymbol]={IpAddress->"127.0.0.1",HttpPort->8333,Type->"S"};
 
 
-Options[t3OpenObject]={IpAddress->"127.0.0.1",TcpPort->5333,SoTimeOut->200,WaitBeforeRead->200};
+Options[t3OpenObject]={IpAddress->"127.0.0.1",TcpPort->5333,SoTimeOut->300,WaitBeforeRead->1000};
+
+
+Options[t3OpenObjectT]={IpAddress->"127.0.0.1",TcpPort->5333,SoTimeOut->300,WaitBeforeRead->300};
 
 
 Options[t3OpenGetHDailyClosePrice]={IpAddress->"127.0.0.1",HttpPort->8333,Frequency->"1D"};
@@ -281,19 +293,29 @@ Return[codeList02];
 ];
 
 
+t3OpenObjectT[codeList_,OptionsPattern[]]:=Module[{ipAddress,tcpPort,soTimeOut,waitBeforeRead,objList,codeList02},
+{ipAddress,tcpPort,soTimeOut,waitBeforeRead}=OptionValue[{IpAddress,TcpPort,SoTimeOut,WaitBeforeRead}];
+(*check argument*)
+If[MatrixQ[codeList]==False,Message[t3OpenObject::badarg, codeList];Return[1]];
+objList=Table[JavaNew["com.t3.t3OpenT",MakeJavaObject[ipAddress],MakeJavaObject[tcpPort],MakeJavaObject[soTimeOut],MakeJavaObject[waitBeforeRead]],{i,1,Dimensions[codeList][[1]]}];
+Table[objList[[i]]@openConnection[],{i,1,Dimensions[objList][[1]]}];
+codeList02 = Table[Append[codeList[[i]],objList[[i]]],{i,1,Dimensions[objList][[1]]}];
+Return[codeList02];
+];
+
+
 t3OpenSubscribeLastPrice[myT3OpenObj_,exchange_,market_,code_]:= Module[
 {funSub,request,response},
 response={};
 funSub= "function=subscribe|item=";
 (*build the string request to send*)
 request =StringJoin[{funSub,exchange,".",market,".",code,"|schema=","last_price"}];
-
-(*set the request*)
+(*set the request inside t3open object field*)
 myT3OpenObj@setRequest[request];
 (* call subsribeData method *)
 myT3OpenObj@subscribeData[];
 (* read the pushedData field *)
-response = myT3OpenObj@getPushedData[];
+response = myT3OpenObj@getResponse[];
 Return[response];
 ];
 
@@ -304,13 +326,12 @@ response={};
 funSub= "function=subscribe|item=";
 (*build the string request to send*)
 request =StringJoin[{funSub,exchange,".",market,".",code,"|schema=","best_bid1"}];
-(*set poolingWhat attribute*)
-myT3OpenObj@setPoolingWhat["best_bid1"];
-(*send the request*)
-myT3OpenObj@getRefOutStream[]@println[request];
-(*read the first response*)
-response = myT3OpenObj@getRefBufReader[]@readLine[];
-(*response = Take[Flatten[StringSplit[response,"|"]],-1];*)
+(*set the request inside t3open object field*)
+myT3OpenObj@setRequest[request];
+(* call subsribeData method *)
+myT3OpenObj@subscribeData[];
+(* read the pushedData field *)
+response = myT3OpenObj@getResponse[];
 Return[response];
 ];
 
@@ -321,14 +342,23 @@ response={};
 funSub= "function=subscribe|item=";
 (*build the string request to send*)
 request =StringJoin[{funSub,exchange,".",market,".",code,"|schema=","best_ask1"}];
-(*set poolingWhat attribute*)
-myT3OpenObj@setPoolingWhat["best_ask1"];
-(*send the request*)
-myT3OpenObj@getRefOutStream[]@println[request];
-(*read the first response*)
-response = myT3OpenObj@getRefBufReader[]@readLine[];
-(*response = Take[Flatten[StringSplit[response,"|"]],-1];*)
+(*set the request inside t3open object field*)
+myT3OpenObj@setRequest[request];
+(* call subsribeData method *)
+myT3OpenObj@subscribeData[];
+(* read the pushedData field *)
+response = myT3OpenObj@getResponse[];
 Return[response];
+];
+
+
+t3OpenRefresh[myT3OpenObj_]:=Module[{pushedData,pushedDataNew},
+(* conserva ultimo refresh *)
+pushedData = myT3OpenObj@getPushedData[];
+myT3OpenObj@refresh[];
+pushedDataNew = myT3OpenObj@getPushedData[];
+If[pushedDataNew == 0,Return[pushedData],Return[pushedDataNew]];
+(*Return[response];*)
 ];
 
 
@@ -349,8 +379,9 @@ Return[response];
 
 t3OpenUnsubscribe[myT3OpenObj_]:=Module[{i},
 (*send unsubscribe comand*)
-myT3OpenObj@getRefOutStream[]@println["function=unsubscribe"];
+(*myT3OpenObj@getRefOutStream[]@println["function=unsubscribe"];*)
 (*close java socket connection*)
+myT3OpenObj@unsubscribe[];
 myT3OpenObj@getRefSocket[]@close[];
 (*release java object*)
 ReleaseJavaObject[myT3OpenObj];
@@ -510,12 +541,11 @@ subData =Table[Append[data[[i]],data02Lastprice[[i,1]][[5]]],{i,1,Length[data]}]
 (*first call to subscribed data*)
 Table[t3OpenSubscribeLastPrice[subData[[i,5]],subData[[i,1]],subData[[i,2]],subData[[i,3]]],{i,1,Length[data]}];
 (*get subscribed data*)
-lastPrice =Table[t3OpenGetSubscribedData[subData[[i,5]]],{i,1,Length[data]}];
-(*here we should check if lastPrice is null, if null you have to request again*)
-If[MemberQ[lastPrice,{Null}],Return[1];Abort[]];
+(*lastPrice =Table[t3OpenGetSubscribedData[subData[[i,5]]],{i,1,Length[data]}];*)
+lastPrice =Table[t3OpenRefresh[subData[[i,5]]],{i,1,Length[data]}];
 (*format for better output*)
 lastPrice01 = Table[StringSplit[lastPrice[[i]],"|"],{i,1,Length[data]}];
-lastPrice02=lastPrice01[[All,1]][[All,2]];
+lastPrice02=lastPrice01[[All,1]];
 lastUpdate = Table[DateString[],{Length[data]}];
 finalPutChain={lastUpdate,data[[All,3]],lastPrice02};
 finalPutChain01 = Prepend[Transpose[finalPutChain],{"LastUpdateTime","Symbol","LastPrice"}];
@@ -536,9 +566,9 @@ Table[t3OpenSubscribeLastPrice[subData[[i,5]],subData[[i,1]],subData[[i,2]],subD
 Table[t3OpenSubscribeBestBid1[subData[[i,6]],subData[[i,1]],subData[[i,2]],subData[[i,3]]],{i,1,Length[data]}];
 Table[t3OpenSubscribeBestAsk1[subData[[i,7]],subData[[i,1]],subData[[i,2]],subData[[i,3]]],{i,1,Length[data]}];
 (*get subscribed data*)
-lastPrice =Table[t3OpenGetSubscribedData[subData[[i,5]]],{i,1,Length[data]}];
-bestBid1 =Table[t3OpenGetSubscribedData[subData[[i,6]]],{i,1,Length[data]}];
-bestAsk1=Table[t3OpenGetSubscribedData[subData[[i,7]]],{i,1,Length[data]}];
+lastPrice =Table[t3OpenRefresh[subData[[i,5]]],{i,1,Length[data]}];
+bestBid1 =Table[t3OpenRefresh[subData[[i,6]]],{i,1,Length[data]}];
+bestAsk1=Table[t3OpenRefresh[subData[[i,7]]],{i,1,Length[data]}];
 (*here we should check if lastPrice is null, if null you have to request again*)
 If[MemberQ[lastPrice,{Null}],Return[1];Abort[]];
 If[MemberQ[bestBid1,{Null}],Return[1];Abort[]];
@@ -547,9 +577,9 @@ If[MemberQ[bestAsk1,{Null}],Return[1];Abort[]];
 lastPrice01 = Table[StringSplit[lastPrice[[i]],"|"],{i,1,Length[data]}];
 bestBid101 = Table[StringSplit[bestBid1[[i]],"|"],{i,1,Length[data]}];
 bestAsk101 = Table[StringSplit[bestAsk1[[i]],"|"],{i,1,Length[data]}];
-lastPrice02=lastPrice01[[All,1]][[All,2]];
-bestBid102= bestBid101[[All,1]][[All,2]];
-bestAsk102 = bestAsk101[[All,1]][[All,2]];
+lastPrice02=lastPrice01[[All,2]];
+bestBid102= bestBid101[[All,2]];
+bestAsk102 = bestAsk101[[All,2]];
 lastUpdate = Table[DateString[],{Length[data]}];
 finalPutChain={lastUpdate,data[[All,4]],lastPrice02,bestBid102,bestAsk102};
 finalPutChain01 = Prepend[Transpose[finalPutChain],{"LastUpdateTime","Symbol","LastPrice","BestBid1","BestAsk1"}];
@@ -619,35 +649,17 @@ Table[t3OpenSubscribeLastPrice[subData[[i,7]],data[[i,5]],data[[i,6]],subData[[i
 Table[t3OpenSubscribeBestBid1[subData[[i,8]],data[[i,5]],data[[i,6]],subData[[i,1]]],{i,1,Length[data]}];
 Table[t3OpenSubscribeBestAsk1[subData[[i,9]],data[[i,5]],data[[i,6]],subData[[i,1]]],{i,1,Length[data]}];
 (*get subscribed data*)
-lastPrice = Table[t3OpenGetSubscribedData[subData[[i,7]]],{i,1,Length[data]}];
-bestBid1 = Table[t3OpenGetSubscribedData[subData[[i,8]]],{i,1,Length[data]}];
-bestAsk1 = Table[t3OpenGetSubscribedData[subData[[i,9]]],{i,1,Length[data]}];
-(*here we should check if lastPrice is null, if null you have to request again*)
-If[MemberQ[lastPrice,{Null}],lastPrice=0;
-	(*Table[t3OpenUnsubscribe[subData[[i,7]]],{i,1,Length[data]}];
-	Table[t3OpenUnsubscribe[subData[[i,8]]],{i,1,Length[data]}];
-	Table[t3OpenUnsubscribe[subData[[i,9]]],{i,1,Length[data]}];
-	Return[1];*)
-];
-If[MemberQ[bestBid1,{Null}],bestBid1=0;
-	(*Table[t3OpenUnsubscribe[subData[[i,7]]],{i,1,Length[data]}];
-	Table[t3OpenUnsubscribe[subData[[i,8]]],{i,1,Length[data]}];
-	Table[t3OpenUnsubscribe[subData[[i,9]]],{i,1,Length[data]}];
-	Return[1];*)
-];
-If[MemberQ[bestAsk1,{Null}],bestAsk1=0;
-	(*Table[t3OpenUnsubscribe[subData[[i,7]]],{i,1,Length[data]}];
-	Table[t3OpenUnsubscribe[subData[[i,8]]],{i,1,Length[data]}];
-	Table[t3OpenUnsubscribe[subData[[i,9]]],{i,1,Length[data]}];
-	Return[1];*)
-];
+lastPrice = Table[t3OpenRefresh[subData[[i,7]]],{i,1,Length[data]}];
+bestBid1 = Table[t3OpenRefresh[subData[[i,8]]],{i,1,Length[data]}];
+bestAsk1 = Table[t3OpenRefresh[subData[[i,9]]],{i,1,Length[data]}];
+
 (*format for better output*)
 lastPrice01 = Table[StringSplit[lastPrice[[i]],"|"],{i,1,Length[data]}];
 bestBid101 = Table[StringSplit[bestBid1[[i]],"|"],{i,1,Length[data]}];
 bestAsk101 = Table[StringSplit[bestAsk1[[i]],"|"],{i,1,Length[data]}];
-lastPrice02 = lastPrice01[[All,1]][[All,2]];
-bestBid102 = bestBid101[[All,1]][[All,2]];
-bestAsk102 = bestAsk101[[All,1]][[All,2]];
+lastPrice02 = lastPrice01[[All,1]];
+bestBid102 = bestBid101[[All,1]];
+bestAsk102 = bestAsk101[[All,1]];
 lastUpdate = Table[DateString[{"Day","/","Month","/","Year"," ","Hour24",":","Minute",":","Second"}],{Length[data]}];
 (*prepare for output*)
 daysToExp =Table[ DateDifference[Take[DateList[],3],Take[DateList[data[[1,4]]],3]],{Length[data]}];
@@ -658,7 +670,8 @@ finalPutChain01 = Prepend[Transpose[finalPutChain],{"LastUpdateTime","Symbol","L
 Table[t3OpenUnsubscribe[subData[[i,7]]],{i,1,Length[data]}];
 Table[t3OpenUnsubscribe[subData[[i,8]]],{i,1,Length[data]}];
 Table[t3OpenUnsubscribe[subData[[i,9]]],{i,1,Length[data]}];
-Return[finalPutChain01];
+(*Return[finalPutChain01];*)
+Return[lastPrice];
 ];
 
 

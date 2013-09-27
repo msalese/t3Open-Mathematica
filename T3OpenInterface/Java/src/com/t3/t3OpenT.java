@@ -11,7 +11,7 @@ package com.t3;
 import java.net.*;
 import java.io.*;
 
-public class t3Open {
+public class t3OpenT implements Runnable{
 	
 	private String ipAddress;
 	private Integer	portNumber;
@@ -24,6 +24,7 @@ public class t3Open {
 	private Boolean connectionStatus;
 	private Integer waitBeforeRead;
 	private String pushedData;
+	public Boolean gotData;
 	private String response;
 	private String request;
 	
@@ -35,7 +36,7 @@ public class t3Open {
 	 * @param portNumber
 	 * @param socketTimeOut
 	 */
-	public t3Open(String ipAddress,Integer portNumber,Integer socketTimeOut, Integer waitBeforeRead) {
+	public t3OpenT(String ipAddress,Integer portNumber,Integer socketTimeOut, Integer waitBeforeRead) {
 		super();
 		this.ipAddress = ipAddress;
 		this.portNumber = portNumber;
@@ -48,11 +49,22 @@ public class t3Open {
 		this.connectionStatus = null;
 		this.waitBeforeRead =  waitBeforeRead;
 		this.pushedData = null;
+		this.gotData = false;
 		this.response = null;
 		this.request = null;
 	}
 	
 	
+	 
+	/**
+	 * @return the gotData
+	 */
+	public Boolean getGotData() {
+		return gotData;
+	}
+
+
+
 	/**
 	 * @return the waitBeforeRead
 	 */
@@ -138,8 +150,8 @@ public class t3Open {
 	 * @return the pooledData
 	 */
 	public String getPushedData() {
-		return pushedData;
-	}
+				return pushedData;
+	}	
 
 	
 	public String getIpAddress(){
@@ -167,73 +179,22 @@ public class t3Open {
 	
 	public void subscribeData(){
 	
-	//send subscription request	
+	//send request	
 	refOutStream.println(this.request);	
-		
-	try{
-		//read first response and out it in response filed
-		//this response should be an OK or KO
-		this.response = this.refBufReader.readLine();
-		
-		//sleep otherwise is too fast
-		try { 
-			Thread.sleep(this.waitBeforeRead); 
-		}
-		catch(InterruptedException e) { 
-		} 
-		
-		//check if bufferedReader is ready
-		while (this.refBufReader.ready()){
-			//if ready red the second response and put it in pushedData field
-			this.pushedData = this.refBufReader.readLine();
-		}
-		
-		//if second response is null set it to zero
-		if(this.pushedData == null){
-			this.pushedData = "0|0";
-		}
-	}	
-	catch(SocketTimeoutException e){
-		this.pushedData = "0|0";
-	}
-	catch (IOException e) {
-		this.pushedData = "0|0";
-
-    }
-		
-	}
 	
-	public void refresh(){
 	
 	try{
 		//read first response
 		this.response = this.refBufReader.readLine();
-		
-		//sleep otherwise is too fast
-		try { 
-			Thread.sleep(this.waitBeforeRead); 
-		}
-		catch(InterruptedException e) { 
-		} 
-		
-		//check if bufferedReader is ready
-		while (this.refBufReader.ready()){
-			//if ready red the second response and put it in pushedData field
-			this.pushedData = this.refBufReader.readLine();
-		}
-		
-		//if second response is null set it to zero
-		if(this.pushedData == null){
-			this.pushedData = "0|0";
-		}
 	}	
 	catch(SocketTimeoutException e){
-		this.pushedData = "0|0";
+		this.response = "timeOut";
 	}
 	catch (IOException e) {
-		this.pushedData = "0|0";
+		this.pushedData = "error";
+
     }
-	
+		
 	}
 	
 	public void unsubscribe(){
@@ -261,10 +222,10 @@ public class t3Open {
 		
 	}
 	catch(UnknownHostException e) {
-        System.err.println("Don't know about host.");
+        //System.err.println("Don't know about host.");
     }
 	catch (IOException e) {
-        System.err.println("Couldn't get I/O for the connection.");
+        //System.err.println("Couldn't get I/O for the connection.");
     }
 
 	}
@@ -278,11 +239,59 @@ public class t3Open {
 		this.closeStatus = this.refSocket.isClosed();
 	}
 	catch(IOException e){
-		 System.err.println("Couldn't get I/O for the connection.");
+		 //System.err.println("Couldn't get I/O for the connection.");
 	}
 	
 	}
 	
+	@Override
+	public void run(){
+		
+		Thread chisono = Thread.currentThread();
+		
+		
+		try{
+			//check if bufferedReader is ready
+			while (true){
+				//sleep otherwise is too fast
+				try {
+					//System.out.println(chisono.getName());
+					//System.out.println("check new data");
+					
+					Thread.sleep(this.waitBeforeRead);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 
+				//if ready red the second response and put it in pushedData field
+				this.pushedData = this.refBufReader.readLine();
+				gotData = true;
+				//if second response is null set it to zero
+				if(pushedData == null){
+					pushedData = Integer.toString(0);
+				}
+
+				try{
+					//System.out.println(chisono.getName());
+					Thread.sleep(100);
+				}
+				catch(InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} 
+			}
+		}	
+		catch(SocketTimeoutException e){
+			response = "timeOut";
+			//System.out.println("timeOut");
+			unsubscribe();
+		}
+		catch (IOException e) {
+			pushedData = "error";
+
+	    }
+			
+		}
 		
 
 }

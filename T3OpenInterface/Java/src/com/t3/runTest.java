@@ -48,7 +48,7 @@ public class runTest {
 		System.out.println("read pooled data");
 		System.out.println(my.getPushedData());
 		
-		System.out.println(my.getConenctionStatus());
+		System.out.println(my.getConnectionStatus());
 		System.out.println(my.getCloseStatus());
 		
 		if(my.getPushedData()==null){
@@ -57,7 +57,7 @@ public class runTest {
 		
 		my.closeConnection();
 		
-		System.out.println(my.getConenctionStatus());
+		System.out.println(my.getConnectionStatus());
 		System.out.println(my.getCloseStatus());	
 		
 		
