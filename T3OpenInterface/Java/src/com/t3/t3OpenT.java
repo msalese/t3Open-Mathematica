@@ -10,6 +10,9 @@ package com.t3;
 
 import java.net.*;
 import java.io.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class t3OpenT implements Runnable{
 	
@@ -20,15 +23,17 @@ public class t3OpenT implements Runnable{
 	private PrintWriter refOutStream;
 	private InputStreamReader refInputStreamReader;
 	private BufferedReader refBufReader;
-	private Boolean closeStatus;
 	private Boolean connectionStatus;
 	private Integer waitBeforeRead;
 	private String pushedData;
-	public Boolean gotData;
 	private String response;
 	private String request;
-	
-	
+	private Thread refThread;
+	private Boolean thExtSignal;
+	private String info[];
+	private DateFormat dateFormat;
+    private Calendar cal ;
+    private String dateTimeSample; 
 
 
 	/**
@@ -41,30 +46,24 @@ public class t3OpenT implements Runnable{
 		this.ipAddress = ipAddress;
 		this.portNumber = portNumber;
 		this.refSocket = null;
+		this.socketTimeOut = socketTimeOut;
 		this.refOutStream = null;
 		this.refInputStreamReader = null;
 		this.refBufReader = null;
-		this.socketTimeOut = socketTimeOut;
-		this.closeStatus = null;
 		this.connectionStatus = null;
 		this.waitBeforeRead =  waitBeforeRead;
 		this.pushedData = null;
-		this.gotData = false;
 		this.response = null;
 		this.request = null;
+		this.refThread = null;
+		this.thExtSignal = null;
+		this.info = new String[6];
+		this.dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		this.cal = Calendar.getInstance();
 	}
 	
 	
 	 
-	/**
-	 * @return the gotData
-	 */
-	public Boolean getGotData() {
-		return gotData;
-	}
-
-
-
 	/**
 	 * @return the waitBeforeRead
 	 */
@@ -83,9 +82,18 @@ public class t3OpenT implements Runnable{
 	/**
 	 * @return the closeStatus
 	 */
-	public Boolean getCloseStatus() {
-		return closeStatus;
+	public Boolean getThExtSignal() {
+		return thExtSignal;
 	}
+	
+	
+	/**
+	 * @param closeStatus the closeStatus to set
+	 */
+	public void setThExtSignal(Boolean thExtSignal) {
+		this.thExtSignal = thExtSignal;
+	}
+
 
 
 	/**
@@ -210,7 +218,6 @@ public class t3OpenT implements Runnable{
 		//Socket mySocket = new Socket(this.ipAddress,this.portNumber);
 				
 		this.refSocket.setSoTimeout(this.socketTimeOut);  
-		this.closeStatus = this.refSocket.isClosed();
 		this.connectionStatus = this.refSocket.isConnected();
 	
 		this.refOutStream = new PrintWriter(this.refSocket.getOutputStream(),true);
@@ -233,10 +240,8 @@ public class t3OpenT implements Runnable{
 	public void closeConnection(){
 	try{
 		this.connectionStatus = this.refSocket.isConnected();
-		this.closeStatus = this.refSocket.isClosed();
 		this.refSocket.close();
 		this.connectionStatus = this.refSocket.isConnected();
-		this.closeStatus = this.refSocket.isClosed();
 	}
 	catch(IOException e){
 		 //System.err.println("Couldn't get I/O for the connection.");
@@ -244,41 +249,86 @@ public class t3OpenT implements Runnable{
 	
 	}
 	
+	
+	
+	/**
+	 * @return the refThread
+	 */
+	public Thread getRefThread() {
+		return refThread;
+	}
+
+
+
+	/**
+	 * @param refThread the refThread to set
+	 */
+	public void setRefThread(Thread refThread) {
+		this.refThread = refThread;
+	}
+
+    
+
+	/**
+	 * @return the info
+	 */
+	public String[] getInfo() {
+		return info;
+	}
+
+
+
+	/**
+	 * @return the dateTime
+	 */
+	public String getDateTimeSample() {
+		return dateTimeSample;
+	}
+
+
+
 	@Override
 	public void run(){
 		
-		Thread chisono = Thread.currentThread();
-		
+		thExtSignal = false;
+		refThread = Thread.currentThread();
 		
 		try{
-			//check if bufferedReader is ready
-			while (true){
-				//sleep otherwise is too fast
-				try {
-					//System.out.println(chisono.getName());
-					//System.out.println("check new data");
-					
-					Thread.sleep(this.waitBeforeRead);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} 
-				//if ready red the second response and put it in pushedData field
-				this.pushedData = this.refBufReader.readLine();
-				gotData = true;
-				//if second response is null set it to zero
-				if(pushedData == null){
-					pushedData = Integer.toString(0);
-				}
 
+			while (true){
+				
 				try{
-					//System.out.println(chisono.getName());
-					Thread.sleep(100);
-				}
-				catch(InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} 
+					//controlla se il thread deve essere terminato
+					if(thExtSignal == true){
+						//interrompi
+						Thread.currentThread().interrupt();
+					}
+					//se interrotto raise exception
+					if(Thread.interrupted()){
+						 throw new InterruptedException();
+				
+					}
+								
+					
+					//if ready red the second response and put it in pushedData field
+					this.pushedData = this.refBufReader.readLine();
+					dateTimeSample = dateFormat.format(cal.getTime()).toString();
+					String responseBidAsk[] = pushedData.split("\\|", 6);
+					for(int i=0 ; i<=responseBidAsk.length-1;i++){
+						if(responseBidAsk[i].length()>0){
+							info[i]=responseBidAsk[i];
+						}else{
+							info[i]=info[i];
+						}
+					}
+				
+				}catch (InterruptedException e) {
+			        // We've been interrupted: no more messages.
+			        this.unsubscribe();
+			        return;
+			        
+			    }
+		
 			}
 		}	
 		catch(SocketTimeoutException e){
